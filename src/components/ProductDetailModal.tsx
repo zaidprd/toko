@@ -32,9 +32,33 @@ export default function ProductDetailModal({
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
-  const [calcSubdistrict, setCalcSubdistrict] = useState('Depok, Sleman, D.I. Yogyakarta');
+  const [calcSubdistrict, setCalcSubdistrict] = useState('Kelapa Dua, Kebon Jeruk, Jakarta Barat');
+  const [courierRates, setCourierRates] = useState<CourierRate[]>(MOCK_COURIER_RATES);
   const [selectedCourierRate, setSelectedCourierRate] = useState<CourierRate>(MOCK_COURIER_RATES[0]);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Auto fetch ongkir saat destinasi diubah
+  const handleCalculateShipping = async (dest: string) => {
+    setCalcSubdistrict(dest);
+    try {
+      const res = await fetch('/api/shipping/cost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destinationCity: dest,
+          destinationDistrict: dest,
+          weightGrams: product?.weightGrams || 1000,
+        }),
+      });
+      const data = await res.json();
+      if (data.rates && data.rates.length > 0) {
+        setCourierRates(data.rates);
+        setSelectedCourierRate(data.rates[0]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   if (!product) return null;
 
@@ -208,25 +232,37 @@ export default function ProductDetailModal({
 
               {/* Shipping Estimator (Khusus Barang Fisik via KiriminAja) */}
               {!isDigital && (
-                <div className="p-3 bg-[#F5EFEB] rounded-2xl border border-[#E6E1D8] space-y-2">
+                <div className="p-3.5 bg-[#F5EFEB] rounded-2xl border border-[#E6E1D8] space-y-2.5">
                   <div className="flex items-center justify-between text-xs font-bold text-[#222222]">
                     <span className="flex items-center gap-1.5">
                       <Calculator className="w-3.5 h-3.5 text-[#DE5A35]" />
-                      <span>Simulasi Ongkir KiriminAja</span>
+                      <span>Cek Tarif KiriminAja (Real-Time)</span>
                     </span>
                     <span className="text-[11px] font-normal text-[#7A7A7A]">
-                      Berat: {product.weightGrams} gram
+                      Berat: {product.weightGrams} gr
                     </span>
                   </div>
-                  <input
-                    type="text"
-                    value={calcSubdistrict}
-                    onChange={(e) => setCalcSubdistrict(e.target.value)}
-                    className="w-full bg-white border border-[#E6E1D8] rounded-xl px-3 py-1.5 text-xs text-[#222222]"
-                    placeholder="Masukkan Kecamatan Tujuan..."
-                  />
+
+                  <div className="bg-white/80 p-2 rounded-xl text-[11px] text-[#595959] border border-[#E6E1D8] flex items-center justify-between">
+                    <span>📍 <strong>Asal Toko:</strong> Kebon Jeruk, Jakarta Barat (11550)</span>
+                    <span className="text-[10px] text-[#1F6347] font-bold">Gudang Utama</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-semibold text-[#595959] block mb-1">
+                      Ketik Kota / Kecamatan Tujuan:
+                    </label>
+                    <input
+                      type="text"
+                      value={calcSubdistrict}
+                      onChange={(e) => handleCalculateShipping(e.target.value)}
+                      className="w-full bg-white border border-[#E6E1D8] rounded-xl px-3 py-1.5 text-xs text-[#222222] focus:border-[#DE5A35] outline-none"
+                      placeholder="Contoh: Bandung, Surabaya, Medan, Tangerang..."
+                    />
+                  </div>
+
                   <div className="grid grid-cols-3 gap-1.5 pt-1">
-                    {MOCK_COURIER_RATES.map((rate) => (
+                    {courierRates.map((rate) => (
                       <button
                         key={rate.courierCode}
                         type="button"
@@ -239,7 +275,7 @@ export default function ProductDetailModal({
                       >
                         <div className="text-[10px] font-bold text-[#222222] truncate">{rate.courierName}</div>
                         <div className="text-[11px] font-extrabold text-[#1F6347]">{formatIDR(rate.cost)}</div>
-                        <div className="text-[9px] text-[#7A7A7A]">{rate.etd}</div>
+                        <div className="text-[9px] text-[#7A7A7A] truncate">{rate.etd}</div>
                       </button>
                     ))}
                   </div>

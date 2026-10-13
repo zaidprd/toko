@@ -262,6 +262,11 @@ export default function CheckoutModal({
                         <span className="text-[10px] text-[#19583E] font-bold">API Real-Time</span>
                       </div>
 
+                      <div className="bg-white/80 p-2 rounded-xl text-[11px] text-[#595959] border border-[#E6E1D8] flex items-center justify-between">
+                        <span>📍 <strong>Dikirim dari Gudang:</strong> Kebon Jeruk, Jakarta Barat (11550)</span>
+                        <span className="text-[10px] text-[#1F6347] font-bold">JNE, J&T, SiCepat</span>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[11px] font-semibold text-[#595959]">Provinsi</label>
