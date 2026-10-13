@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#DE5A35"/>
+  <!-- Sparkle Gold Star -->
+  <path d="M256 70 L268 112 L310 124 L268 136 L256 178 L244 136 L202 124 L244 112 Z" fill="#FBBF24"/>
+  <!-- Open Book -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M120 200 C180 180 230 190 256 220 C282 190 332 180 392 200 V390 C332 370 282 380 256 410 C230 380 180 370 120 390 Z" fill="#FFFFFF" fill-opacity="0.15"/>
+    <path d="M256 220 V410"/>
+    <path d="M120 200 C180 180 230 190 256 220 C282 190 332 180 392 200"/>
+    <path d="M120 390 C180 370 230 380 256 410 C282 380 332 370 392 390"/>
+    <path d="M120 200 V390"/>
+    <path d="M392 200 V390"/>
+  </g>
+</svg>
