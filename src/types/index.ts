@@ -13,6 +13,8 @@ export interface Product {
   discountPercent?: number;
   coverImage: string;
   galleryImages: string[];
+  videoUrl?: string; // Link YouTube, YouTube Shorts, atau URL video MP4 / Data URL
+  videoDurationSec?: number; // Maksimal 30 detik
   rating: number;
   reviewsCount: number;
   publisherOrBrand: string;

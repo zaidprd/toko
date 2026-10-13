@@ -25,7 +25,13 @@ import {
   Loader2,
   Layers,
   Sparkles,
+  Video,
+  Film,
+  Play,
+  Star,
+  Link as LinkIcon,
 } from 'lucide-react';
+import { isYouTubeUrl, getYouTubeEmbedUrl } from '@/lib/mediaUtils';
 
 export default function AdminPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -50,12 +56,23 @@ export default function AdminPage() {
   const [price, setPrice] = useState<number>(50000);
   const [stock, setStock] = useState<number>(20);
   const [weightGrams, setWeightGrams] = useState<number>(350);
+
+  // Photos & Gallery States (Multi-photos, min 5 recommended)
   const [coverImage, setCoverImage] = useState('');
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [imageError, setImageError] = useState('');
+
+  // Video States (Max 30s or YouTube)
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [videoError, setVideoError] = useState('');
+  const [isCheckingVideo, setIsCheckingVideo] = useState(false);
+
   const [publisherOrBrand, setPublisherOrBrand] = useState('Pustaka Zaidly Kids');
   const [targetAge, setTargetAge] = useState<TargetAge>('4-6 Tahun');
   const [shortDescription, setShortDescription] = useState('');
   const [descriptionHtml, setDescriptionHtml] = useState('');
-  const [imageError, setImageError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   // 1. Check Server Session on Mount
@@ -142,24 +159,139 @@ export default function AdminPage() {
     }
   };
 
-  // Handle direct file upload from device
-  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Handle multiple image file upload from device
+  const handleMultipleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      setImageError('Ukuran file foto melebihi 2 MB. Harap pilih foto dengan ukuran maksimal 2 MB.');
+    setImageError('');
+    const newFiles = Array.from(files);
+    const maxFileSize = 3 * 1024 * 1024; // 3 MB per foto
+
+    newFiles.forEach((file) => {
+      if (file.size > maxFileSize) {
+        setImageError(`File "${file.name}" melebihi 3 MB. Harap kompres ukuran foto Anda.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const dataUrl = event.target.result as string;
+          setGalleryImages((prev) => {
+            if (prev.includes(dataUrl)) return prev;
+            const updated = [...prev, dataUrl];
+            if (!coverImage) {
+              setCoverImage(dataUrl);
+            }
+            return updated;
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = '';
+  };
+
+  // Handle adding image from URL
+  const handleAddImageUrl = () => {
+    const trimmed = newImageUrl.trim();
+    if (!trimmed) return;
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      setImageError('URL gambar harus diawali dengan https:// atau http://');
       return;
     }
     setImageError('');
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setCoverImage(event.target.result as string);
+    setGalleryImages((prev) => {
+      if (prev.includes(trimmed)) return prev;
+      const updated = [...prev, trimmed];
+      if (!coverImage) {
+        setCoverImage(trimmed);
       }
+      return updated;
+    });
+    setNewImageUrl('');
+  };
+
+  // Set image as main cover
+  const handleSetAsCover = (img: string) => {
+    setCoverImage(img);
+    setGalleryImages((prev) => {
+      const filtered = prev.filter((item) => item !== img);
+      return [img, ...filtered];
+    });
+  };
+
+  // Remove individual image
+  const handleRemoveImage = (index: number) => {
+    setGalleryImages((prev) => {
+      const removed = prev[index];
+      const next = prev.filter((_, i) => i !== index);
+      if (removed === coverImage) {
+        setCoverImage(next[0] || '');
+      }
+      return next;
+    });
+  };
+
+  // Handle direct video upload with strict 30-second duration restriction
+  const handleVideoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setVideoError('');
+    setIsCheckingVideo(true);
+
+    // Max 25 MB file size
+    if (file.size > 25 * 1024 * 1024) {
+      setVideoError('Ukuran file video melebihi 25 MB. Harap kompres video atau gunakan tautan link YouTube.');
+      setIsCheckingVideo(false);
+      e.target.value = '';
+      return;
+    }
+
+    // Check duration via HTML5 Video element
+    const videoEl = document.createElement('video');
+    videoEl.preload = 'metadata';
+    const tempBlobUrl = URL.createObjectURL(file);
+    videoEl.src = tempBlobUrl;
+
+    videoEl.onloadedmetadata = () => {
+      URL.revokeObjectURL(tempBlobUrl);
+      const dur = videoEl.duration;
+      setIsCheckingVideo(false);
+
+      if (dur > 30.5) {
+        setVideoError(
+          `❌ Durasi video melebihi batas 30 detik (terdeteksi: ${Math.round(dur)} detik). Silakan potong/pangkas video menjadi maksimal 30 detik sebelum diunggah.`
+        );
+        return;
+      }
+
+      setVideoDuration(dur);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) {
+          setVideoUrl(ev.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
+
+    videoEl.onerror = () => {
+      URL.revokeObjectURL(tempBlobUrl);
+      setIsCheckingVideo(false);
+      setVideoError('Gagal membaca video. Pastikan format file adalah MP4 atau WebM.');
+    };
+
+    e.target.value = '';
+  };
+
+  const handleRemoveVideo = () => {
+    setVideoUrl('');
+    setVideoDuration(null);
+    setVideoError('');
   };
 
   const resetForm = () => {
@@ -171,11 +303,16 @@ export default function AdminPage() {
     setStock(20);
     setWeightGrams(350);
     setCoverImage('');
+    setGalleryImages([]);
+    setNewImageUrl('');
+    setImageError('');
+    setVideoUrl('');
+    setVideoDuration(null);
+    setVideoError('');
     setPublisherOrBrand('Pustaka Zaidly Kids');
     setTargetAge('4-6 Tahun');
     setShortDescription('');
     setDescriptionHtml('');
-    setImageError('');
   };
 
   const handleStartAdd = () => {
@@ -192,11 +329,19 @@ export default function AdminPage() {
     setStock(prod.stock || 20);
     setWeightGrams(prod.weightGrams || 350);
     setCoverImage(prod.coverImage);
+    const existingGallery = Array.isArray(prod.galleryImages) && prod.galleryImages.length > 0
+      ? prod.galleryImages
+      : (prod.coverImage ? [prod.coverImage] : []);
+    setGalleryImages(existingGallery);
+    setNewImageUrl('');
+    setImageError('');
+    setVideoUrl(prod.videoUrl || '');
+    setVideoDuration(prod.videoDurationSec || null);
+    setVideoError('');
     setPublisherOrBrand(prod.publisherOrBrand);
     setTargetAge(prod.targetAge);
     setShortDescription(prod.shortDescription);
     setDescriptionHtml(prod.descriptionHtml);
-    setImageError('');
     setActiveTab('form');
   };
 
@@ -219,7 +364,18 @@ export default function AdminPage() {
 
     const defaultImg =
       coverImage.trim() ||
+      galleryImages[0] ||
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80';
+
+    let finalGallery = [...galleryImages];
+    if (coverImage.trim() && !finalGallery.includes(coverImage.trim())) {
+      finalGallery.unshift(coverImage.trim());
+    }
+    if (finalGallery.length === 0) {
+      finalGallery = [defaultImg];
+    }
+    const finalCover = coverImage.trim() || finalGallery[0];
+    finalGallery = [finalCover, ...finalGallery.filter((img) => img !== finalCover)];
 
     const slug = title
       .toLowerCase()
@@ -233,8 +389,10 @@ export default function AdminPage() {
       category,
       type,
       price: Number(price) || 10000,
-      coverImage: defaultImg,
-      galleryImages: [defaultImg],
+      coverImage: finalCover,
+      galleryImages: finalGallery,
+      videoUrl: videoUrl.trim() || undefined,
+      videoDurationSec: videoDuration ? Math.round(videoDuration) : undefined,
       rating: 5.0,
       reviewsCount: 1,
       publisherOrBrand: publisherOrBrand.trim() || 'Pustaka Zaidly Kids',
@@ -564,103 +722,326 @@ export default function AdminPage() {
             ) : (
               /* TAB 2: SHOPEE-STYLE PRODUCT FORM */
               <form onSubmit={handleSaveProduct} className="space-y-6 max-w-3xl mx-auto">
-                {/* 1. FOTO PRODUK */}
-                <div className="p-5 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] space-y-3">
+                {/* 1. GALERI FOTO PRODUK (MINIMAL 5 FOTO DIREKOMENDASIKAN, TANPA BATAS) */}
+                <div className="p-5 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#222222] flex items-center gap-1.5">
                       <ImageIcon className="w-4 h-4 text-[#DE5A35]" />
-                      <span>1. Foto Produk (Upload &amp; Aturan Ukuran)</span>
+                      <span>1. Galeri Foto Produk (Disarankan Min. 5 Foto Detail)</span>
                     </h3>
-                    <span className="text-[10px] text-red-500 font-bold">* Wajib</span>
+                    <span className="text-[10px] text-red-500 font-bold">* Wajib Min. 1 Foto</span>
                   </div>
 
-                  <div className="p-3 bg-white rounded-xl border border-[#E6E1D8] text-[11px] text-[#595959] space-y-1">
-                    <div className="font-bold text-[#222222] flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#1F6347]" />
-                      <span>Aturan &amp; Standar Ukuran Foto Toko:</span>
+                  {/* Panduan Foto */}
+                  <div className="p-3.5 bg-white rounded-xl border border-[#E6E1D8] text-[11px] text-[#595959] space-y-1.5">
+                    <div className="font-bold text-[#222222] flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-[#1F6347]" />
+                      <span>Panduan Foto Toko Zaidly Kids:</span>
                     </div>
-                    <ul className="list-disc pl-4 space-y-0.5 text-[#595959]">
+                    <ul className="list-disc pl-4 space-y-1 text-[#595959]">
                       <li>
-                        <strong>Rasio Ideal:</strong> 1:1 (Persegi) atau minimal <strong>800 x 800 pixel</strong>.
+                        <strong>Rekomendasi Minimal 5 Foto:</strong> Unggah foto Cover Depan, Halaman Isi/Daftar Isi, Detail Tekstur/Bahan, Tampak Belakang/Sinopsis, serta Variasi/Kemasan agar pembeli puas melihat detail.
                       </li>
                       <li>
-                        <strong>Ukuran File:</strong> Maksimal <strong>2 MB</strong> per foto (format: JPG, PNG, atau WebP).
+                        <strong>Bebas Tanpa Batas Maksimal:</strong> Anda dapat mengunggah berapa pun foto (opsional tanpa batas kuota foto) sesuai kebutuhan produk.
                       </li>
                       <li>
-                        <strong>Kesesuaian Syar&apos;i:</strong> Foto barang asli atau ilustrasi <em>faceless</em> tanpa wajah makhluk bernyawa detail.
+                        <strong>Standar Ukuran:</strong> Rasio 1:1 (Persegi) atau minimal <strong>800 x 800 pixel</strong> (format JPG, PNG, atau WebP, maks 3 MB per foto).
+                      </li>
+                      <li>
+                        <strong>Kesesuaian Syar&apos;i:</strong> Foto asli atau ilustrasi <em>faceless</em> tanpa gambar wajah bernyawa detail.
                       </li>
                     </ul>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start pt-1">
-                    <div className="aspect-square rounded-2xl border-2 border-dashed border-[#DE5A35]/40 bg-white flex flex-col items-center justify-center p-2 overflow-hidden relative group">
-                      {coverImage ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={coverImage}
-                            alt="Preview"
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setCoverImage('')}
-                            className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Hapus Foto"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </>
-                      ) : (
-                        <div className="text-center p-3 text-[#7A7A7A]">
-                          <ImageIcon className="w-8 h-8 mx-auto text-[#DE5A35]/60 mb-1" />
-                          <span className="text-[10px] block font-semibold">Belum ada foto</span>
-                          <span className="text-[9px] block text-[#999999]">Pilih file dari HP/Laptop</span>
-                        </div>
-                      )}
+                  {/* Upload Controls Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="text-[11px] font-bold text-[#222222] block mb-1">
+                        Pilih Foto dari Perangkat (Bisa Pilih Banyak Sekaligus):
+                      </label>
+                      <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 bg-white border border-[#E6E1D8] hover:border-[#DE5A35] rounded-xl text-xs font-bold text-[#222222] cursor-pointer transition-all hover:bg-[#FAF7F2] shadow-2xs">
+                        <Upload className="w-4 h-4 text-[#DE5A35]" />
+                        <span>📷 Upload Foto dari Galeri (Bisa 5+ Sekaligus)</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleMultipleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
 
-                    <div className="sm:col-span-2 space-y-2.5">
-                      <div>
-                        <label className="text-[11px] font-bold text-[#222222] block mb-1">
-                          Pilih Foto dari Perangkat (HP / Laptop):
-                        </label>
-                        <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 bg-white border border-[#E6E1D8] hover:border-[#DE5A35] rounded-xl text-xs font-bold text-[#222222] cursor-pointer transition-all hover:bg-[#FAF7F2]">
-                          <Upload className="w-4 h-4 text-[#DE5A35]" />
-                          <span>📷 Upload Foto dari Galeri / File</span>
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={handleImageFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-                        {imageError && (
-                          <p className="text-[10px] text-red-500 mt-1 font-semibold">{imageError}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                          Atau Masukkan URL Gambar (Opsional):
-                        </label>
+                    <div>
+                      <label className="text-[11px] font-semibold text-[#595959] block mb-1">
+                        Atau Tambahkan URL Gambar (Opsional):
+                      </label>
+                      <div className="flex gap-2">
                         <input
                           type="url"
-                          value={coverImage}
-                          onChange={(e) => setCoverImage(e.target.value)}
+                          value={newImageUrl}
+                          onChange={(e) => setNewImageUrl(e.target.value)}
                           placeholder="https://images.unsplash.com/..."
-                          className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
+                          className="flex-1 bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
                         />
+                        <button
+                          type="button"
+                          onClick={handleAddImageUrl}
+                          className="px-3.5 py-2 bg-[#FAF7F2] hover:bg-[#DE5A35] hover:text-white border border-[#E6E1D8] rounded-xl text-xs font-bold text-[#222222] transition-colors shrink-0 cursor-pointer"
+                        >
+                          + Tambah
+                        </button>
                       </div>
                     </div>
                   </div>
+
+                  {imageError && (
+                    <p className="text-[11px] text-red-500 font-semibold bg-red-50 p-2.5 rounded-xl border border-red-200">
+                      {imageError}
+                    </p>
+                  )}
+
+                  {/* Status Bar Jumlah Foto */}
+                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-white rounded-xl border border-[#E6E1D8] text-xs">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-[#222222]">
+                        Total Foto: {galleryImages.length} Foto
+                      </span>
+                      {galleryImages.length >= 5 ? (
+                        <span className="text-[10px] font-bold text-[#19583E] bg-[#E8F4EC] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <Check className="w-3 h-3" />
+                          <span>Sudah Memenuhi Rekomendasi 5+ Foto</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full">
+                          💡 Tambahkan {Math.max(0, 5 - galleryImages.length)} foto lagi untuk hasil detail maksimal
+                        </span>
+                      )}
+                    </div>
+                    {galleryImages.length > 0 && (
+                      <span className="text-[10px] text-[#7A7A7A]">
+                        Klik &quot;Jadikan Sampul&quot; untuk memilih foto muka utama
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Photo Grid Preview */}
+                  {galleryImages.length === 0 ? (
+                    <div className="p-8 border-2 border-dashed border-[#DE5A35]/30 rounded-2xl bg-white text-center space-y-2">
+                      <ImageIcon className="w-10 h-10 mx-auto text-[#DE5A35]/50" />
+                      <p className="text-xs font-bold text-[#222222]">
+                        Belum Ada Foto Produk yang Ditambahkan
+                      </p>
+                      <p className="text-[11px] text-[#7A7A7A]">
+                        Pilih foto dari galeri HP / laptop Anda (bisa langsung pilih 5 atau lebih sekaligus) atau masukkan URL gambar di atas.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                      {galleryImages.map((img, idx) => {
+                        const isCover = coverImage ? img === coverImage : idx === 0;
+                        return (
+                          <div
+                            key={idx}
+                            className={`group relative aspect-square rounded-2xl overflow-hidden border-2 bg-white shadow-2xs transition-all ${
+                              isCover ? 'border-[#DE5A35] ring-2 ring-[#DE5A35]/30' : 'border-[#E6E1D8] hover:border-[#DE5A35]/50'
+                            }`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img}
+                              alt={`Foto produk ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+
+                            {/* Badge Label */}
+                            <div className="absolute top-2 left-2 z-10">
+                              {isCover ? (
+                                <span className="bg-[#DE5A35] text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-0.5">
+                                  <Star className="w-2.5 h-2.5 fill-white" />
+                                  <span>Foto Utama</span>
+                                </span>
+                              ) : (
+                                <span className="bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                                  Foto #{idx + 1}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx)}
+                              className="absolute top-2 right-2 z-10 p-1.5 bg-red-600/90 hover:bg-red-600 text-white rounded-full text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              title="Hapus Foto"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Set As Cover Button */}
+                            {!isCover && (
+                              <button
+                                type="button"
+                                onClick={() => handleSetAsCover(img)}
+                                className="absolute bottom-2 inset-x-2 py-1 bg-white/95 hover:bg-white text-[#222222] hover:text-[#DE5A35] text-[10px] font-bold rounded-lg shadow-sm border border-[#E6E1D8] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-center"
+                              >
+                                Jadikan Sampul
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                {/* 2. INFORMASI DASAR PRODUK */}
+                {/* 2. VIDEO REVIEW PRODUK (MAKS 30 DETIK / LINK YOUTUBE) */}
+                <div className="p-5 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#222222] flex items-center gap-1.5">
+                      <Film className="w-4 h-4 text-[#DE5A35]" />
+                      <span>2. Video Review Produk (Maks 30 Detik atau Link YouTube)</span>
+                    </h3>
+                    <span className="text-[10px] text-[#7A7A7A] font-semibold bg-[#E6E1D8]/60 px-2 py-0.5 rounded-md">
+                      Opsional
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 bg-white rounded-xl border border-[#E6E1D8] text-[11px] text-[#595959] space-y-1.5">
+                    <div className="font-bold text-[#222222] flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-[#DE5A35]" />
+                      <span>Ketentuan Video Produk:</span>
+                    </div>
+                    <ul className="list-disc pl-4 space-y-1 text-[#595959]">
+                      <li>
+                        <strong>Link YouTube / YouTube Shorts (Sangat Disarankan):</strong> Masukkan link video YouTube produk (bebas durasi &amp; hemat kuota pengunjung tanpa membebani server).
+                      </li>
+                      <li>
+                        <strong>Upload Video Langsung dari Perangkat:</strong> Dibatasi maksimal <strong>30 detik</strong> (format MP4/WebM, maksimal 25 MB). Sistem akan otomatis memvalidasi durasi video saat dipilih.
+                      </li>
+                      <li>
+                        <strong>Adab Syar&apos;i:</strong> Pastikan video hening tanpa alunan musik instrumen.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {/* Link YouTube Input */}
+                    <div>
+                      <label className="text-[11px] font-bold text-[#222222] block mb-1">
+                        Link YouTube / YouTube Shorts (Disarankan):
+                      </label>
+                      <div className="flex items-center gap-1.5 bg-white border border-[#E6E1D8] focus-within:border-[#DE5A35] rounded-xl px-3 py-2">
+                        <LinkIcon className="w-3.5 h-3.5 text-[#7A7A7A] shrink-0" />
+                        <input
+                          type="url"
+                          value={isYouTubeUrl(videoUrl) ? videoUrl : ''}
+                          onChange={(e) => {
+                            setVideoUrl(e.target.value);
+                            setVideoDuration(null);
+                            setVideoError('');
+                          }}
+                          placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
+                          className="w-full bg-transparent text-xs text-[#222222] outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Direct Upload Video with 30s check */}
+                    <div>
+                      <label className="text-[11px] font-bold text-[#222222] block mb-1">
+                        Atau Upload Video (Maksimal 30 Detik):
+                      </label>
+                      <label className="flex items-center justify-center gap-2 w-full py-2 px-3 bg-white border border-[#E6E1D8] hover:border-[#DE5A35] rounded-xl text-xs font-bold text-[#222222] cursor-pointer transition-all hover:bg-[#FAF7F2] shadow-2xs">
+                        {isCheckingVideo ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-[#DE5A35]" />
+                            <span>Memeriksa Durasi Video...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-[#DE5A35]" />
+                            <span>🎬 Upload Video (MP4 / WebM &le; 30s)</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm"
+                          disabled={isCheckingVideo}
+                          onChange={handleVideoFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {videoError && (
+                    <div className="text-[11px] text-red-600 font-semibold bg-red-50 p-3 rounded-xl border border-red-200 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                      <span>{videoError}</span>
+                    </div>
+                  )}
+
+                  {/* Video Player Preview if attached */}
+                  {videoUrl && (
+                    <div className="p-4 bg-white rounded-2xl border border-[#E6E1D8] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-[#222222] flex items-center gap-1.5">
+                            <Play className="w-3.5 h-3.5 fill-[#DE5A35] text-[#DE5A35]" />
+                            <span>Preview Video Produk Terpasang:</span>
+                          </span>
+                          {videoDuration ? (
+                            <span className="text-[10px] font-bold text-[#19583E] bg-[#E8F4EC] px-2 py-0.5 rounded-full">
+                              ⏱️ Durasi: {Math.round(videoDuration)} detik (Lolos Maks 30s)
+                            </span>
+                          ) : isYouTubeUrl(videoUrl) ? (
+                            <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full">
+                              ▶ Terhubung ke YouTube
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleRemoveVideo}
+                          className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus Video</span>
+                        </button>
+                      </div>
+
+                      <div className="aspect-video max-w-md mx-auto rounded-xl overflow-hidden bg-black border border-[#E6E1D8] relative">
+                        {isYouTubeUrl(videoUrl) && getYouTubeEmbedUrl(videoUrl) ? (
+                          <iframe
+                            src={getYouTubeEmbedUrl(videoUrl)!}
+                            title="Preview Video Produk"
+                            className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        ) : (
+                          <video
+                            src={videoUrl}
+                            controls
+                            playsInline
+                            className="w-full h-full object-contain"
+                          >
+                            Browser tidak mendukung pemutar video.
+                          </video>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. INFORMASI DASAR PRODUK */}
                 <div className="p-5 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#222222] flex items-center gap-1.5">
                     <Package className="w-4 h-4 text-[#DE5A35]" />
-                    <span>2. Informasi Dasar Produk</span>
+                    <span>3. Informasi Dasar Produk</span>
                   </h3>
 
                   <div>
@@ -752,11 +1133,11 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 3. HARGA, STOK & EKSPEDISI */}
+                {/* 4. HARGA, STOK & EKSPEDISI */}
                 <div className="p-5 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#222222] flex items-center gap-1.5">
                     <Save className="w-4 h-4 text-[#DE5A35]" />
-                    <span>3. Harga, Stok &amp; Ekspedisi</span>
+                    <span>4. Harga, Stok &amp; Ekspedisi</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -821,11 +1202,11 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 4. DESKRIPSI & SPESIFIKASI */}
+                {/* 5. DESKRIPSI & SPESIFIKASI */}
                 <div className="p-5 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#222222] flex items-center gap-1.5">
                     <Edit3 className="w-4 h-4 text-[#DE5A35]" />
-                    <span>4. Deskripsi &amp; Detail Produk</span>
+                    <span>5. Deskripsi &amp; Detail Produk</span>
                   </h3>
 
                   <div>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Product, CourierRate } from '@/types';
 import { MOCK_COURIER_RATES } from '@/data/mockData';
+import ProductGallery from './ProductGallery';
 import {
   X,
   Star,
@@ -29,7 +30,6 @@ export default function ProductDetailModal({
   onAddToCart,
   onDirectCheckout,
 }: ProductDetailModalProps) {
-  const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
   const [calcSubdistrict, setCalcSubdistrict] = useState('Kelapa Dua, Kebon Jeruk, Jakarta Barat');
@@ -62,7 +62,6 @@ export default function ProductDetailModal({
 
   if (!product) return null;
 
-  const currentImage = selectedImage || product.coverImage;
   const isDigital = product.type === 'DIGITAL_EBOOK';
 
   const formatIDR = (val: number) => {
@@ -90,53 +89,7 @@ export default function ProductDetailModal({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8">
             {/* Left Column: Gallery & Previews */}
             <div className="md:col-span-6 space-y-3">
-              <div className="relative aspect-4/3 w-full bg-[#F3EEE7] rounded-2xl overflow-hidden border border-[#E6E1D8]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={currentImage}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
-
-                <div className="absolute top-3 left-3">
-                  {isDigital ? (
-                    <span className="badge-digital text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
-                      <Download className="w-3.5 h-3.5" />
-                      <span>⚡ Unduhan Digital Instan</span>
-                    </span>
-                  ) : (
-                    <span className="badge-physical text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5" />
-                      <span>{product.category} Fisik</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Thumbnails */}
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                <button
-                  onClick={() => setSelectedImage(product.coverImage)}
-                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 shrink-0 ${
-                    currentImage === product.coverImage ? 'border-[#DE5A35]' : 'border-[#E6E1D8]'
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={product.coverImage} alt="Cover" className="w-full h-full object-cover" />
-                </button>
-                {product.galleryImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImage(img)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 shrink-0 ${
-                      currentImage === img ? 'border-[#DE5A35]' : 'border-[#E6E1D8]'
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
+              <ProductGallery product={product} />
 
               {/* Digital Preview Trigger */}
               {isDigital && product.previewPages && (

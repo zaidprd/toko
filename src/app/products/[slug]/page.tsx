@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { INITIAL_PRODUCTS, MOCK_COURIER_RATES } from '@/data/mockData';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import ProductGallery from '@/components/ProductGallery';
 import {
   Star,
   Download,
@@ -102,27 +103,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             {/* Gallery Left */}
             <div className="md:col-span-6 space-y-4">
-              <div className="aspect-4/3 rounded-2xl overflow-hidden bg-[#F3EEE7] border border-[#E6E1D8] relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={product.coverImage}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-3 left-3">
-                  {isDigital ? (
-                    <span className="badge-digital text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
-                      <Download className="w-3.5 h-3.5" />
-                      <span>⚡ Unduhan Digital Instan</span>
-                    </span>
-                  ) : (
-                    <span className="badge-physical text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5" />
-                      <span>{product.category} Fisik</span>
-                    </span>
-                  )}
-                </div>
-              </div>
+              <ProductGallery product={product} />
             </div>
 
             {/* Buy Box Right */}
