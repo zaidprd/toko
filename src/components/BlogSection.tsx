@@ -1,16 +1,13 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
+import Link from 'next/link';
 import { BlogPost } from '@/types';
-import { BookOpen, Calendar, Clock, ChevronRight, X, Sparkles } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Sparkles, BookOpen } from 'lucide-react';
 
 interface BlogSectionProps {
   posts: BlogPost[];
 }
 
 export default function BlogSection({ posts }: BlogSectionProps) {
-  const [activePost, setActivePost] = useState<BlogPost | null>(null);
-
   return (
     <section id="blog-section" className="py-12 sm:py-16 bg-[#FAF7F2] border-t border-[#E6E1D8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,10 +28,10 @@ export default function BlogSection({ posts }: BlogSectionProps) {
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {posts.map((post) => (
-            <article
+            <Link
               key={post.id}
-              onClick={() => setActivePost(post)}
-              className="bg-white rounded-3xl border border-[#E6E1D8] overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group etsy-card"
+              href={`/blog/${post.slug}`}
+              className="bg-white rounded-3xl border border-[#E6E1D8] overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
             >
               <div className="relative aspect-16/9 overflow-hidden bg-[#F3EEE7]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -72,70 +69,25 @@ export default function BlogSection({ posts }: BlogSectionProps) {
                 </div>
 
                 <div className="pt-3 border-t border-[#F3EEE7] flex items-center justify-between text-xs font-bold text-[#DE5A35]">
-                  <span>Baca Selengkapnya</span>
+                  <span>Baca Artikel Lengkap</span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
-      </div>
 
-      {/* Article Detail Reader Modal (100% Pure HTML Renderer!) */}
-      {activePost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs overflow-y-auto animate-fade-in">
-          <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E6E1D8] overflow-hidden my-auto max-h-[92vh] flex flex-col">
-            <div className="p-4 sm:p-5 border-b border-[#E6E1D8] bg-[#FAF7F2] flex items-center justify-between sticky top-0 z-10">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[#DE5A35]" />
-                <span className="text-xs font-bold text-[#595959]">Artikel Tarbiyah Sunnah</span>
-              </div>
-              <button
-                onClick={() => setActivePost(null)}
-                className="w-8 h-8 rounded-full bg-white hover:bg-[#EBE4D9] flex items-center justify-center text-[#595959]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto p-5 sm:p-8 space-y-4">
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-[#19583E] bg-[#E8F4EC] px-3 py-1 rounded-full">
-                  {activePost.category}
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#222222] font-serif-title leading-tight">
-                  {activePost.title}
-                </h1>
-                <div className="flex items-center gap-3 text-xs text-[#7A7A7A] pt-1">
-                  <span>Penulis: <strong>{activePost.author}</strong></span>
-                  <span>•</span>
-                  <span>{activePost.date}</span>
-                </div>
-              </div>
-
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={activePost.coverImage}
-                alt={activePost.title}
-                className="w-full h-64 object-cover rounded-2xl border border-[#E6E1D8]"
-              />
-
-              {/* Pure HTML Rendered Content */}
-              <div
-                className="text-sm text-[#333333] leading-relaxed space-y-3 pt-2 prose"
-                dangerouslySetInnerHTML={{ __html: activePost.contentHtml }}
-              />
-
-              <div className="mt-8 p-4 bg-[#FAF7F2] rounded-2xl border border-[#E6E1D8] text-xs text-[#595959] space-y-1">
-                <p className="font-bold text-[#222222]">Catatan Redaksi:</p>
-                <p>
-                  Seluruh isi artikel disarikan dari rujukan para ulama Ahlus Sunnah wal Jama&apos;ah dan kajian terpercaya (seperti Rumaysho.com oleh Ustadz Muhammad Abduh Tuasikal).
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* View All Blog Link */}
+        <div className="text-center mt-8">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-[#FAF7F2] text-[#222222] text-xs font-bold rounded-full border border-[#E6E1D8] shadow-xs hover:shadow transition-all"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-[#DE5A35]" />
+            <span>Lihat Semua Artikel di Halaman Blog →</span>
+          </Link>
         </div>
-      )}
+      </div>
     </section>
   );
 }

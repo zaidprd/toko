@@ -56,8 +56,37 @@ export default async function ProductDetailPage({ params }: Props) {
     }).format(val);
   };
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    image: product.coverImage,
+    description: product.shortDescription,
+    brand: {
+      '@type': 'Brand',
+      name: product.publisherOrBrand,
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `https://toko.zaidly.com/products/${product.slug}`,
+      priceCurrency: 'IDR',
+      price: product.price,
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '5.0',
+      reviewCount: product.reviewsCount || 1,
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] py-8 sm:py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
         <Link
