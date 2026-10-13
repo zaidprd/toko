@@ -39,3 +39,11 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function GET() {
+  return NextResponse.json({
+    status: 'active',
+    endpoint: 'https://toko.zaidly.com/api/payment/webhook',
+    message: 'Endpoint Webhook Mayar toko.zaidly.com siap menerima transaksi.',
+  });
+}
