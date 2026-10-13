@@ -33,9 +33,6 @@ export default function CartDrawer({
 
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const hasPhysical = items.some((item) => item.product.type !== 'DIGITAL_EBOOK');
-  const freeShippingThreshold = 150000;
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
-  const freeShippingPercent = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs transition-opacity animate-fade-in">
@@ -55,27 +52,6 @@ export default function CartDrawer({
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Free Shipping Progress for physical */}
-        {hasPhysical && (
-          <div className="bg-[#E8F4EC] p-3 text-xs border-b border-[#19583E]/10">
-            {remainingForFreeShipping > 0 ? (
-              <p className="text-[#19583E]">
-                Belanja <strong>{formatIDR(remainingForFreeShipping)}</strong> lagi untuk <strong>Bebas Ongkir se-Jawa!</strong>
-              </p>
-            ) : (
-              <p className="text-[#19583E] font-bold">
-                🎉 Masyaa Allah! Anda mendapatkan Bebas Ongkir se-Jawa!
-              </p>
-            )}
-            <div className="w-full bg-white/70 h-2 rounded-full mt-2 overflow-hidden">
-              <div
-                className="bg-[#1F6347] h-full rounded-full transition-all duration-300"
-                style={{ width: `${freeShippingPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Cart Item List */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">

@@ -4,23 +4,22 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL('https://toko.zaidly.com'),
   title: {
-    default: 'toko.zaidly.com | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
-    template: '%s | Toko Zaidly',
+    default: 'toko.zaid | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
+    template: '%s | toko.zaid',
   },
   description:
-    'Toko online terpercaya pilihan buku anak, mainan edukasi kayu faceless, dan printable ebook sesuai manhaj salaf dan sunnah (Rujukan Rumaysho). Belanja amanah & terpercaya.',
+    'Toko online terpercaya pilihan buku anak, mainan edukasi kayu faceless, dan printable ebook sesuai manhaj salaf dan sunnah. Belanja amanah & jujur.',
   keywords: [
     'buku anak sunnah',
     'mainan kayu montessori islami',
     'ebook anak printable',
     'buku faceless',
-    'toko zaidly',
+    'toko zaid',
     'parenting sunnah',
-    'rumaysho',
   ],
-  authors: [{ name: 'Ahmad Zaid (Toko Zaidly)' }],
-  creator: 'Toko Zaidly',
-  publisher: 'Toko Zaidly',
+  authors: [{ name: 'Ahmad Zaid (toko.zaid)' }],
+  creator: 'toko.zaid',
+  publisher: 'toko.zaid',
   alternates: {
     canonical: 'https://toko.zaidly.com',
   },
@@ -35,17 +34,17 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: 'toko.zaidly.com | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
+    title: 'toko.zaid | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
     description:
       'Koleksi buku rujukan shahih, mainan kayu sensori non-toxic bebas musik & tahayul, serta paket printable lembar aktivitas untuk belajar di rumah.',
     url: 'https://toko.zaidly.com',
-    siteName: 'Toko Zaidly',
+    siteName: 'toko.zaid',
     locale: 'id_ID',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'toko.zaidly.com | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
+    title: 'toko.zaid | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
     description:
       'Toko online terpercaya pilihan buku anak, mainan edukasi kayu faceless, dan printable ebook ramah sunnah.',
   },
@@ -70,10 +69,10 @@ export default function RootLayout({
   const storeJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
-    name: 'Toko Zaidly',
+    name: 'toko.zaid',
     url: 'https://toko.zaidly.com',
     description:
-      'Toko buku anak islami, mainan kayu sensori faceless tanpa musik, dan printable ebook ramah sunnah (Rujukan Rumaysho).',
+      'Toko buku anak islami, mainan kayu sensori faceless tanpa musik, dan printable ebook ramah sunnah.',
     currenciesAccepted: 'IDR',
     paymentAccepted: 'QRIS, Virtual Account',
     areaServed: 'ID',

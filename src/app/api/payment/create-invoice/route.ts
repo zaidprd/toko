@@ -11,7 +11,6 @@ import { db, isDatabaseConfigured } from '@/lib/db';
  * ulang ongkir sendiri, sehingga harga tidak bisa dimanipulasi lewat DevTools.
  */
 
-const FREE_SHIPPING_MIN = 150000;
 const MAX_QTY_PER_ITEM = 50;
 
 interface IncomingItem {
@@ -99,7 +98,7 @@ export async function POST(req: Request) {
     if (!rate) return badRequest('Layanan ekspedisi tidak valid. Silakan pilih ulang kurir.');
 
     courierLabel = `${rate.courierName} (${rate.service})`;
-    shippingCost = subtotal >= FREE_SHIPPING_MIN ? 0 : rate.cost;
+    shippingCost = rate.cost;
   }
 
   const grandTotal = subtotal + shippingCost;

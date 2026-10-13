@@ -29,7 +29,7 @@ export default function Footer() {
             <div className="w-8 h-8 rounded-lg bg-[#DE5A35] text-white flex items-center justify-center font-bold">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-base font-serif-title">toko.zaidly.com</span>
+            <span className="font-bold text-base font-serif-title">toko.zaid</span>
           </div>
           <p className="text-[#595959] leading-relaxed text-[11px]">
             Toko online edukasi anak berbasis syariat Islam dan manhaj Salafush Shalih. Dikelola dengan amanah dan kejujuran.
@@ -60,7 +60,7 @@ export default function Footer() {
         <div className="space-y-2.5">
           <h4 className="font-bold text-xs uppercase tracking-wider text-[#222222]">Prinsip Toko Kami</h4>
           <ul className="space-y-1.5 text-[#595959]">
-            <li><a href="#blog-section" className="hover:text-[#DE5A35]">Fatwa Gambar &amp; Mainan (Rumaysho)</a></li>
+            <li><a href="#blog-section" className="hover:text-[#DE5A35]">Fatwa Gambar &amp; Mainan Anak</a></li>
             <li><a href="#" className="hover:text-[#DE5A35]">Kaidah Faceless Illustration</a></li>
             <li><a href="#" className="hover:text-[#DE5A35]">Ketentuan Hak Khiyar &amp; Retur Cacat</a></li>
             <li><a href="#" className="hover:text-[#DE5A35]">Akad Jual Beli Jelas &amp; Transparan</a></li>
@@ -85,7 +85,7 @@ export default function Footer() {
 
       {/* Copyright Bar */}
       <div className="border-t border-[#E6E1D8] py-4 px-4 text-center text-[11px] text-[#7A7A7A] max-w-7xl mx-auto">
-        <p>© 2026 toko.zaidly.com. Hak cipta dilindungi undang-undang &amp; syariat.</p>
+        <p>© 2026 toko.zaid. Hak cipta dilindungi undang-undang &amp; syariat.</p>
       </div>
     </footer>
   );

@@ -7,18 +7,18 @@ import { BookOpen, Sparkles, ArrowLeft } from 'lucide-react';
 import { getBlogPosts } from '@/lib/catalog';
 
 export const metadata: Metadata = {
-  title: 'Blog Parenting Sunnah & Fikih Edukasi Anak | Toko Zaidly',
+  title: 'Blog Parenting Sunnah & Fikih Edukasi Anak | toko.zaid',
   description:
-    'Kumpulan artikel tarbiyah buah hati di atas manhaj Salafush Shalih, rujukan fatwa Rumaysho seputar mainan faceless anak, dan tips menanamkan tauhid sejak usia dini.',
+    'Kumpulan artikel tarbiyah buah hati di atas manhaj Salafush Shalih, seputar mainan faceless anak, dan tips menanamkan tauhid sejak usia dini.',
   alternates: {
     canonical: 'https://toko.zaidly.com/blog',
   },
   openGraph: {
-    title: 'Blog Parenting Sunnah & Fikih Edukasi Anak | Toko Zaidly',
+    title: 'Blog Parenting Sunnah & Fikih Edukasi Anak | toko.zaid',
     description:
       'Artikel panduan mendidik anak sesuai sunnah dan rujukan fatwa ulama seputar adab & mainan anak islami.',
     url: 'https://toko.zaidly.com/blog',
-    siteName: 'Toko Zaidly',
+    siteName: 'toko.zaid',
     locale: 'id_ID',
     type: 'website',
   },
@@ -43,7 +43,7 @@ export default async function BlogIndexPage() {
               <BookOpen className="w-4 h-4" />
             </div>
             <span className="font-bold font-serif-title text-[#222222] text-sm">
-              toko.zaidly.com / blog
+              toko.zaid / blog
             </span>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default async function BlogIndexPage() {
             Nasehat & Edukasi Buah Hati di Atas Manhaj Salaf
           </h1>
           <p className="text-xs sm:text-sm text-[#595959] mt-3 leading-relaxed">
-            Rujukan fatwa dan artikel tarbiyah anak dari asatidzah terpercaya (Rumaysho, Ulama Ahlus Sunnah) untuk ketenangan hati orang tua dalam memilih sarana belajar anak.
+            Rujukan fatwa dan artikel tarbiyah anak dari asatidzah terpercaya Ahlus Sunnah untuk ketenangan hati orang tua dalam memilih sarana belajar anak.
           </p>
         </div>
 

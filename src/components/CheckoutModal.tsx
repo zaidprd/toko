@@ -207,9 +207,7 @@ export default function CheckoutModal({
   const hasPhysical = items.some((item) => item.product.type !== 'DIGITAL_EBOOK');
   const hasDigital = items.some((item) => item.product.type === 'DIGITAL_EBOOK');
 
-  // Free shipping check min 150rb
-  const isFreeShipping = hasPhysical && subtotal >= 150000;
-  const shippingCost = hasPhysical ? (isFreeShipping ? 0 : selectedCourier?.cost ?? 0) : 0;
+  const shippingCost = hasPhysical ? (selectedCourier?.cost ?? 0) : 0;
   const grandTotal = subtotal + shippingCost;
 
   const handleStartMayarPayment = async (e: React.FormEvent) => {
@@ -536,7 +534,7 @@ export default function CheckoutModal({
                                   </div>
                                 </div>
                                 <div className="text-xs font-black text-[#1F6347]">
-                                  {isFreeShipping ? 'GRATIS' : formatIDR(rate.cost)}
+                                  {formatIDR(rate.cost)}
                                 </div>
                               </label>
                             );

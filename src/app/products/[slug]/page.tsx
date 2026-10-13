@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import { getProducts } from '@/lib/catalog';
 import Link from 'next/link';
 import ProductGallery from '@/components/ProductGallery';
+import ProductShareBox from '@/components/ProductShareBox';
 import {
   Download,
   Truck,
@@ -12,6 +13,7 @@ import {
   ArrowLeft,
   ShieldCheck,
   Calculator,
+  ShoppingBag,
 } from 'lucide-react';
 
 interface Props {
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: 'Produk Tidak Ditemukan' };
 
   return {
-    title: `${product.title} | toko.zaidly.com`,
+    title: `${product.title} | toko.zaid`,
     description: product.shortDescription,
     alternates: { canonical: `https://toko.zaidly.com/products/${product.slug}` },
     openGraph: {
@@ -176,12 +178,25 @@ export default async function ProductDetailPage({ params }: Props) {
                 </div>
               )}
 
-              <Link
-                href={`/?checkout=${product.id}`}
-                className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all text-center block"
-              >
-                <span>Beli Sekarang (Langsung Bayar)</span>
-              </Link>
+              <div className="space-y-2">
+                <Link
+                  href={`/?checkout=${product.id}`}
+                  className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all text-center block cursor-pointer"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Beli Sekarang (Langsung Bayar)</span>
+                </Link>
+
+                <Link
+                  href={`/?product=${product.slug}`}
+                  className="w-full py-2.5 bg-white hover:bg-[#F3EEE7] text-[#222222] border border-[#E6E1D8] rounded-full text-xs font-semibold flex items-center justify-center gap-2 transition-all text-center block cursor-pointer"
+                >
+                  <span>Buka di Beranda Katalog</span>
+                </Link>
+              </div>
+
+              {/* Share Box */}
+              <ProductShareBox productTitle={product.title} productSlug={product.slug} />
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-[#7A7A7A]">
                 <ShieldCheck className="w-4 h-4 text-[#1F6347]" />

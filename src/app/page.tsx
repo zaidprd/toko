@@ -126,6 +126,60 @@ export default function Home() {
     setIsCheckoutOpen(true);
   };
 
+  // Deep-linking & modal history handling for shareable products
+  const handleOpenProduct = (product: Product) => {
+    setSelectedProduct(product);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ slug: product.slug }, '', `/products/${product.slug}`);
+    }
+  };
+
+  const handleCloseProduct = () => {
+    setSelectedProduct(null);
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname.startsWith('/products/') || window.location.search.includes('product=')) {
+        window.history.pushState({}, '', '/');
+      }
+    }
+  };
+
+  // Listen to browser Back / Forward buttons
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && e.state.slug) {
+        const found = products.find((p) => p.slug === e.state.slug);
+        if (found) {
+          setSelectedProduct(found);
+          return;
+        }
+      }
+      setSelectedProduct(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [products]);
+
+  // Handle URL parameters (?product=..., ?checkout=...) on initial load
+  useEffect(() => {
+    if (typeof window === 'undefined' || products.length === 0) return;
+    const url = new URL(window.location.href);
+    const checkoutParam = url.searchParams.get('checkout');
+    const productParam = url.searchParams.get('product');
+
+    if (checkoutParam) {
+      const found = products.find((p) => p.id === checkoutParam || p.slug === checkoutParam);
+      if (found) {
+        handleDirectCheckout(found, 1);
+      }
+    } else if (productParam) {
+      const found = products.find((p) => p.slug === productParam || p.id === productParam);
+      if (found) {
+        setSelectedProduct(found);
+      }
+    }
+  }, [products]);
+
   // Wishlist Toggle
   const handleToggleWishlist = (product: Product) => {
     setWishlistIds((prev) =>
@@ -211,7 +265,7 @@ export default function Home() {
                 product={product}
                 isWishlisted={wishlistIds.includes(product.id)}
                 onToggleWishlist={handleToggleWishlist}
-                onSelectProduct={setSelectedProduct}
+                onSelectProduct={handleOpenProduct}
                 onQuickAddToCart={(prod) => handleAddToCart(prod, 1)}
               />
             ))}
@@ -219,7 +273,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* 5. Blog Section (Parenting Sunnah, Rumaysho, Faceless Guideline) */}
+      {/* 5. Blog Section (Parenting Sunnah, Faceless Guideline) */}
       <BlogSection posts={blogPosts} />
 
       {/* 6. Footer (Mission statement & Syar'i principles) */}
@@ -229,7 +283,7 @@ export default function Home() {
       {/* Product Detail Modal */}
       <ProductDetailModal
         product={selectedProduct}
-        onClose={() => setSelectedProduct(null)}
+        onClose={handleCloseProduct}
         onAddToCart={handleAddToCart}
         onDirectCheckout={handleDirectCheckout}
       />

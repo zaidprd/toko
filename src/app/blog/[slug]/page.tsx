@@ -22,14 +22,14 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   if (!post) {
     return {
-      title: 'Artikel Blog Sunnah | Toko Zaidly',
+      title: 'Artikel Blog Sunnah | toko.zaid',
     };
   }
 
   const url = `https://toko.zaidly.com/blog/${post.slug}`;
 
   return {
-    title: `${post.title} | Toko Zaidly`,
+    title: `${post.title} | toko.zaid`,
     description: post.excerpt,
     alternates: {
       canonical: url,
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       title: post.title,
       description: post.excerpt,
       url,
-      siteName: 'Toko Zaidly',
+      siteName: 'toko.zaid',
       locale: 'id_ID',
       type: 'article',
       publishedTime: '2026-10-12T00:00:00Z',
@@ -80,7 +80,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
         publisher: {
           '@type': 'Organization',
-          name: 'Toko Zaidly',
+          name: 'toko.zaid',
           url: 'https://toko.zaidly.com',
           logo: {
             '@type': 'ImageObject',

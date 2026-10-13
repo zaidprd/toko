@@ -21,7 +21,7 @@ export default function BlogSection({ posts }: BlogSectionProps) {
             Nasehat & Edukasi Buah Hati di Atas Manhaj Salaf
           </h2>
           <p className="text-xs sm:text-sm text-[#595959] mt-2">
-            Rujukan fatwa dan artikel tarbiyah anak dari situs-situs terpercaya (Rumaysho, Ulama Ahlus Sunnah) untuk ketenangan hati orang tua.
+            Rujukan fatwa dan artikel tarbiyah anak dari asatidzah terpercaya Ahlus Sunnah untuk ketenangan hati orang tua.
           </p>
         </div>
 
