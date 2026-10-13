@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Product } from '@/types';
-import { Star, Download, Truck, Heart, Plus } from 'lucide-react';
+import { Download, Truck, Heart, Plus } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -105,16 +105,11 @@ export default function ProductCard({
             {product.title}
           </h3>
 
-          {/* Star Ratings */}
+          {/* Honest Syar'i Faceless badge */}
           <div className="flex items-center gap-1.5 text-xs mb-2.5">
-            <div className="flex text-[#F59E0B]">
-              <Star className="w-3.5 h-3.5 fill-[#F59E0B]" />
-            </div>
-            <span className="font-bold text-[#222222] text-xs">{product.rating.toFixed(1)}</span>
-            <span className="text-[#7A7A7A] text-[11px]">({product.reviewsCount})</span>
             {product.isFaceless && (
-              <span className="badge-faceless text-[10px] font-bold px-1.5 py-0.2 rounded ml-auto">
-                Faceless
+              <span className="badge-faceless text-[10px] font-bold px-2 py-0.5 rounded-full">
+                🌿 100% Ilustrasi Faceless (Syar&apos;i)
               </span>
             )}
           </div>

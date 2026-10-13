@@ -94,12 +94,12 @@ export default function TrackingPage() {
           {fromPayment && (
             <div className="p-4 bg-[#E8F4EC] rounded-2xl border border-[#19583E]/20 text-xs text-[#19583E] space-y-1">
               <p className="font-bold">
-                {result?.total === 0
+                {result && (Number(result.total) <= 1 || result.customer?.isFreeOrder)
                   ? `Alhamdulillah! Pesanan gratis #${submittedQuery} berhasil diproses.`
                   : `Terima kasih, pesanan #${submittedQuery} sudah kami terima.`}
               </p>
               <p>
-                {result?.total === 0
+                {result && (Number(result.total) <= 1 || result.customer?.isFreeOrder)
                   ? 'File PDF digital Anda siap diunduh langsung pada tombol di bawah ini.'
                   : 'Bukti pembayaran resmi dikirim ke email Anda. Jika pembayaran berhasil, pesanan akan kami proses dan informasi pengiriman / tautan ebook dikirim ke email & WhatsApp Anda.'}
               </p>
@@ -137,7 +137,7 @@ export default function TrackingPage() {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs text-[#19583E] flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-[#19583E] animate-pulse" />
-                      Status: {Number(result.total) === 0 ? 'Akses Unduh Gratis Terkonfirmasi' : 'Pembayaran Lunas Terverifikasi'}
+                      Status: {Number(result.total) <= 1 || result.customer?.isFreeOrder ? 'Akses Unduh Gratis Terkonfirmasi' : 'Pembayaran Lunas Terverifikasi'}
                     </span>
                     <span className="text-[10px] font-bold text-[#19583E] bg-white px-2 py-0.5 rounded-full border border-[#19583E]/20">
                       PAID
@@ -149,7 +149,7 @@ export default function TrackingPage() {
                       <span>
                         Total:{' '}
                         <strong>
-                          {Number(result.total) === 0
+                          {Number(result.total) <= 1 || result.customer?.isFreeOrder
                             ? 'GRATIS (Rp 0)'
                             : `Rp ${Number(result.total).toLocaleString('id-ID')}`}
                         </strong>

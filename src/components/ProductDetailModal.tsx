@@ -6,7 +6,6 @@ import { MOCK_COURIER_RATES } from '@/data/mockData';
 import ProductGallery from './ProductGallery';
 import {
   X,
-  Star,
   Download,
   Truck,
   ShieldCheck,
@@ -31,7 +30,7 @@ export default function ProductDetailModal({
   onDirectCheckout,
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
+  const [activeTab, setActiveTab] = useState<'desc' | 'specs'>('desc');
   const [calcSubdistrict, setCalcSubdistrict] = useState('Kelapa Dua, Kebon Jeruk, Jakarta Barat');
   const [courierRates, setCourierRates] = useState<CourierRate[]>(MOCK_COURIER_RATES);
   const [selectedCourierRate, setSelectedCourierRate] = useState<CourierRate>(MOCK_COURIER_RATES[0]);
@@ -133,15 +132,16 @@ export default function ProductDetailModal({
                 </h2>
               </div>
 
-              {/* Rating */}
-              <div className="flex items-center gap-2 text-xs">
-                <div className="flex text-[#F59E0B]">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#F59E0B]" />
-                  ))}
-                </div>
-                <span className="font-bold text-[#222222]">{product.rating.toFixed(1)}</span>
-                <span className="text-[#7A7A7A]">({product.reviewsCount} Ulasan Pembeli Terverifikasi)</span>
+              {/* Honest Badges */}
+              <div className="flex items-center gap-2 text-xs flex-wrap">
+                {product.isFaceless && (
+                  <span className="badge-faceless text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                    🌿 100% Ilustrasi Faceless (Syar&apos;i)
+                  </span>
+                )}
+                <span className="text-[#19583E] text-[11px] font-semibold bg-[#E8F4EC] px-2.5 py-0.5 rounded-full">
+                  ✓ Tanpa Musik &amp; Terkurasi
+                </span>
               </div>
 
               {/* Price */}
@@ -339,16 +339,6 @@ export default function ProductDetailModal({
               >
                 Rincian Teknis & Format
               </button>
-              <button
-                onClick={() => setActiveTab('reviews')}
-                className={`pb-3 transition-colors ${
-                  activeTab === 'reviews'
-                    ? 'border-b-2 border-[#DE5A35] text-[#222222]'
-                    : 'text-[#7A7A7A] hover:text-[#222222]'
-                }`}
-              >
-                Ulasan Pembeli ({product.reviewsCount})
-              </button>
             </div>
 
             <div className="pt-4 text-xs text-[#4A4A4A] leading-relaxed">
@@ -398,70 +388,6 @@ export default function ProductDetailModal({
                       </div>
                     </>
                   )}
-                </div>
-              )}
-
-              {activeTab === 'reviews' && (
-                <div className="space-y-4">
-                  {/* Review Summary Breakdown ala Etsy Screenshot 2 */}
-                  <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#E6E1D8] flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <div className="text-2xl font-black text-[#222222] flex items-center gap-2">
-                        <span>{product.rating.toFixed(1)}</span>
-                        <div className="flex text-[#F59E0B]">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-[#F59E0B]" />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-[#7A7A7A] mt-0.5">
-                        Rata-rata dari {product.reviewsCount} pembeli terverifikasi
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
-                      <span className="bg-white px-3 py-1.5 rounded-full border border-[#E6E1D8] text-[#19583E]">
-                        ✓ Kualitas Cetak Jernih (98%)
-                      </span>
-                      <span className="bg-white px-3 py-1.5 rounded-full border border-[#E6E1D8] text-[#19583E]">
-                        ✓ Pengiriman Cepat (100%)
-                      </span>
-                      <span className="bg-white px-3 py-1.5 rounded-full border border-[#E6E1D8] text-[#19583E]">
-                        ✓ Anak Antusias Belajar (95%)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Individual Review Item */}
-                  <div className="border-b border-[#E6E1D8] pb-3 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#222222]">Ummu Abdillah (Jakarta Selatan)</span>
-                      <span className="text-[10px] text-[#7A7A7A]">11 Oktober 2026</span>
-                    </div>
-                    <div className="flex text-[#F59E0B]">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-[#F59E0B]" />
-                      ))}
-                    </div>
-                    <p className="text-xs text-[#595959] mt-1">
-                      &quot;Baaarakallahu feekum, sangat senang menemukan toko yang menjaga adab gambar syar&apos;i untuk anak. Kualitas gambarnya tajam saat dicetak dan anak senang sekali latihan hijaiyah.&quot;
-                    </p>
-                  </div>
-
-                  <div className="border-b border-[#E6E1D8] pb-3 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#222222]">Abu Faruq (Surabaya)</span>
-                      <span className="text-[10px] text-[#7A7A7A]">9 Oktober 2026</span>
-                    </div>
-                    <div className="flex text-[#F59E0B]">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-[#F59E0B]" />
-                      ))}
-                    </div>
-                    <p className="text-xs text-[#595959] mt-1">
-                      &quot;Pengiriman sangat rapi dengan bubble wrap tebal, barang sampai tanpa cacat. Kayu halus dan baunya segar alami tanpa bahan kimia tajam.&quot;
-                    </p>
-                  </div>
                 </div>
               )}
             </div>

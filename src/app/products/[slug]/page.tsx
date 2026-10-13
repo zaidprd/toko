@@ -6,7 +6,6 @@ import { getProducts } from '@/lib/catalog';
 import Link from 'next/link';
 import ProductGallery from '@/components/ProductGallery';
 import {
-  Star,
   Download,
   Truck,
   CheckCircle2,
@@ -78,11 +77,6 @@ export default async function ProductDetailPage({ params }: Props) {
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/NewCondition',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '5.0',
-      reviewCount: product.reviewsCount || 1,
-    },
   };
 
   return (
@@ -122,14 +116,15 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.title}
               </h1>
 
-              <div className="flex items-center gap-2 text-xs">
-                <div className="flex text-[#F59E0B]">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#F59E0B]" />
-                  ))}
-                </div>
-                <span className="font-bold text-[#222222]">{product.rating.toFixed(1)}</span>
-                <span className="text-[#7A7A7A]">({product.reviewsCount} Ulasan Pembeli)</span>
+              <div className="flex items-center gap-2 text-xs flex-wrap">
+                {product.isFaceless && (
+                  <span className="badge-faceless text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                    🌿 100% Ilustrasi Faceless (Syar&apos;i)
+                  </span>
+                )}
+                <span className="text-[#19583E] text-[11px] font-semibold bg-[#E8F4EC] px-2.5 py-0.5 rounded-full">
+                  ✓ Tanpa Musik &amp; Terkurasi
+                </span>
               </div>
 
               <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#E6E1D8]">
