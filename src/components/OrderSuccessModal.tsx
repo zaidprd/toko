@@ -181,16 +181,22 @@ export default function OrderSuccessModal({ order, onClose }: OrderSuccessModalP
 
         {/* Footer Actions */}
         <div className="p-4 sm:p-5 border-t border-[#E6E1D8] bg-[#FAF7F2] flex flex-wrap gap-2 justify-between items-center">
-          <a
-            href={`https://wa.me/6281234567890?text=Assalamu'alaikum%20Admin%20Zaidly,%20saya%20sudah%20membayar%20pesanan%20${order.orderId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-semibold text-[#1F6347] hover:underline flex items-center gap-1.5"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Konfirmasi / Tanya via WhatsApp</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          {process.env.NEXT_PUBLIC_STORE_WHATSAPP ? (
+            <a
+              href={`https://wa.me/${process.env.NEXT_PUBLIC_STORE_WHATSAPP}?text=${encodeURIComponent(
+                `Assalamu'alaikum Admin Zaidly, saya ingin menanyakan pesanan ${order.orderId}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-[#1F6347] hover:underline flex items-center gap-1.5"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Konfirmasi / Tanya via WhatsApp</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          ) : (
+            <span />
+          )}
 
           <button
             onClick={onClose}

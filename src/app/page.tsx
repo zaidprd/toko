@@ -18,35 +18,17 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>(INITIAL_BLOG_POSTS);
 
-  // Load persisted products from localStorage on mount
+  // Shared server catalog; built-in data remains as a read-only fallback.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('zaidly_products');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProducts(parsed);
-        }
-      }
-      const savedBlogs = localStorage.getItem('zaidly_blog_posts');
-      if (savedBlogs) {
-        const parsedBlogs = JSON.parse(savedBlogs);
-        if (Array.isArray(parsedBlogs) && parsedBlogs.length > 0) {
-          setBlogPosts(parsedBlogs);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    Promise.all([fetch('/api/products').then((r) => r.json()), fetch('/api/blogs').then((r) => r.json())])
+      .then(([catalog, blog]) => {
+        if (Array.isArray(catalog.products)) setProducts(catalog.products);
+        if (Array.isArray(blog.posts)) setBlogPosts(blog.posts);
+      }).catch(console.error);
   }, []);
 
   const handleSaveProducts = (newProducts: Product[]) => {
     setProducts(newProducts);
-    try {
-      localStorage.setItem('zaidly_products', JSON.stringify(newProducts));
-    } catch (e) {
-      console.error(e);
-    }
   };
 
   // States

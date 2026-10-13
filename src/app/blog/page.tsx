@@ -1,10 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { INITIAL_BLOG_POSTS } from '@/data/mockData';
 import Footer from '@/components/Footer';
 import BlogIndexList from '@/components/BlogIndexList';
 import { BookOpen, Sparkles, ArrowLeft } from 'lucide-react';
+import { getBlogPosts } from '@/lib/catalog';
 
 export const metadata: Metadata = {
   title: 'Blog Parenting Sunnah & Fikih Edukasi Anak | Toko Zaidly',
@@ -24,7 +24,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogIndexPage() {
+export default async function BlogIndexPage() {
+  const posts = await getBlogPosts();
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#222222]">
       {/* Top Header Bar */}
@@ -78,7 +79,7 @@ export default function BlogIndexPage() {
         </div>
 
         {/* Articles List with Category Filter & Search */}
-        <BlogIndexList initialPosts={INITIAL_BLOG_POSTS} />
+        <BlogIndexList initialPosts={posts} />
       </main>
 
       <Footer />

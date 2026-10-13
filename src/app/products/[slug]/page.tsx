@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { INITIAL_PRODUCTS, MOCK_COURIER_RATES } from '@/data/mockData';
 import { Metadata } from 'next';
+import { getProducts } from '@/lib/catalog';
 import Link from 'next/link';
 import ProductGallery from '@/components/ProductGallery';
 import {
@@ -26,23 +27,25 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = INITIAL_PRODUCTS.find((p) => p.slug === slug);
+  const product = (await getProducts()).find((p) => p.slug === slug);
   if (!product) return { title: 'Produk Tidak Ditemukan' };
 
   return {
     title: `${product.title} | toko.zaidly.com`,
     description: product.shortDescription,
+    alternates: { canonical: `https://toko.zaidly.com/products/${product.slug}` },
     openGraph: {
       title: product.title,
       description: product.shortDescription,
       images: [{ url: product.coverImage }],
+      url: `https://toko.zaidly.com/products/${product.slug}`,
     },
   };
 }
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const product = INITIAL_PRODUCTS.find((p) => p.slug === slug);
+  const product = (await getProducts()).find((p) => p.slug === slug);
 
   if (!product) {
     notFound();

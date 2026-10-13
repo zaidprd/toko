@@ -14,19 +14,11 @@ export default function BlogIndexList({ initialPosts }: BlogIndexListProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Load persisted blog posts from localStorage on client
+  // Load shared published posts from the server.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('zaidly_blog_posts');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPosts(parsed);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    fetch('/api/blogs').then((r) => r.json()).then((data) => {
+      if (Array.isArray(data.posts)) setPosts(data.posts);
+    }).catch(console.error);
   }, []);
 
   // Unique categories

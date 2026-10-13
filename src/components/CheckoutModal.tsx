@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CartItem, CourierRate, CompletedOrder } from '@/types';
-import { MOCK_COURIER_RATES } from '@/data/mockData';
 import { INDONESIA_PROVINCES } from '@/data/indonesiaLocations';
 import {
   X,
@@ -17,7 +16,9 @@ import {
   Loader2,
   Search,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
+// Simulator pembayaran hanya boleh muncul saat pengembangan lokal, tidak pernah di produksi
+const IS_DEV = process.env.NODE_ENV !== 'production';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -30,28 +31,31 @@ export default function CheckoutModal({
   isOpen,
   onClose,
   items,
-  onOrderSuccess,
 }: CheckoutModalProps) {
-  const [fullName, setFullName] = useState('Ahmad Zaid');
-  const [whatsapp, setWhatsapp] = useState('081234567890');
-  const [email, setEmail] = useState('zaid@zaidly.com');
+  const [fullName, setFullName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
 
   // Shipping (Default Jakarta Barat, se-area dengan gudang di Kebon Jeruk)
   const [province, setProvince] = useState('DKI Jakarta');
   const [city, setCity] = useState('Kota Jakarta Barat');
-  const [subdistrict, setSubdistrict] = useState('Kebon Jeruk');
-  const [postalCode, setPostalCode] = useState('11550');
+  const [subdistrict, setSubdistrict] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [isSearchingPostal, setIsSearchingPostal] = useState(false);
   const [postalSuggestions, setPostalSuggestions] = useState<any[]>([]);
   const [postalError, setPostalError] = useState('');
-  const [courierRates, setCourierRates] = useState<CourierRate[]>(MOCK_COURIER_RATES);
-  const [selectedCourier, setSelectedCourier] = useState<CourierRate>(MOCK_COURIER_RATES[0]);
+  const [courierRates, setCourierRates] = useState<CourierRate[]>([]);
+  const [selectedCourier, setSelectedCourier] = useState<CourierRate | null>(null);
+  const [rateSource, setRateSource] = useState<string>('');
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   const currentProvObj = INDONESIA_PROVINCES.find((p) => p.name === province) || INDONESIA_PROVINCES[0];
   const availableCities = currentProvObj.cities;
 
   const updateRatesForDestination = async (pName: string, cName: string, dName: string) => {
+    setIsLoadingRates(true);
     try {
       const res = await fetch('/api/shipping/cost', {
         method: 'POST',
@@ -67,9 +71,17 @@ export default function CheckoutModal({
       if (data.rates && data.rates.length > 0) {
         setCourierRates(data.rates);
         setSelectedCourier(data.rates[0]);
+        setRateSource(data.source || '');
+      } else {
+        setCourierRates([]);
+        setSelectedCourier(null);
       }
     } catch (e) {
       console.error(e);
+      setCourierRates([]);
+      setSelectedCourier(null);
+    } finally {
+      setIsLoadingRates(false);
     }
   };
 
@@ -170,6 +182,17 @@ export default function CheckoutModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'form' | 'mayar_gateway'>('form');
 
+  const needsShipping = items.some((item) => item.product.type !== 'DIGITAL_EBOOK');
+
+  // Muat tarif asli dari server saat checkout dibuka (bukan angka contoh)
+  useEffect(() => {
+    if (isOpen && needsShipping && courierRates.length === 0 && !isLoadingRates) {
+      updateRatesForDestination(province, city, subdistrict);
+    }
+    if (isOpen) setPaymentError('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, needsShipping]);
+
   if (!isOpen) return null;
 
   const formatIDR = (val: number) => {
@@ -186,20 +209,26 @@ export default function CheckoutModal({
 
   // Free shipping check min 150rb
   const isFreeShipping = hasPhysical && subtotal >= 150000;
-  const shippingCost = hasPhysical ? (isFreeShipping ? 0 : selectedCourier.cost) : 0;
+  const shippingCost = hasPhysical ? (isFreeShipping ? 0 : selectedCourier?.cost ?? 0) : 0;
   const grandTotal = subtotal + shippingCost;
 
   const handleStartMayarPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPaymentError('');
+
+    if (hasPhysical && !selectedCourier) {
+      setPaymentError('Ongkir belum tersedia. Lengkapi alamat lalu pilih kurir terlebih dahulu.');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+      // Hanya kirim ID produk + jumlah + kode kurir. Harga & ongkir dihitung ulang di server.
       const res = await fetch('/api/payment/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId,
           customer: {
             fullName,
             whatsapp,
@@ -207,100 +236,43 @@ export default function CheckoutModal({
             province,
             city,
             subdistrict,
+            postalCode,
             addressDetail,
-            courier: hasPhysical ? selectedCourier : undefined,
-            paymentMethod,
           },
-          items,
-          shippingCost,
-          grandTotal,
+          items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+          courierCode: hasPhysical ? selectedCourier?.courierCode : undefined,
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      // Jika ada link invoice resmi dari Mayar.id, arahkan pelanggan langsung ke Mayar!
-      if (data.paymentUrl) {
+      // Link invoice resmi → arahkan pembeli ke halaman pembayaran
+      if (res.ok && data.paymentUrl) {
         window.location.href = data.paymentUrl;
         return;
       }
 
-      // Jika masih mode simulator lokal
-      setStep('mayar_gateway');
+      // Simulator HANYA di lingkungan pengembangan dan hanya jika server memang mode simulasi
+      if (res.ok && data.isSimulation && IS_DEV) {
+        setStep('mayar_gateway');
+        return;
+      }
+
+      setPaymentError(
+        data.error || 'Tagihan pembayaran gagal dibuat. Pesanan BELUM dibayar. Silakan coba lagi.'
+      );
     } catch (err) {
       console.error('Error create invoice:', err);
-      setStep('mayar_gateway');
+      setPaymentError('Koneksi ke server pembayaran gagal. Pesanan BELUM dibayar. Silakan coba lagi.');
     } finally {
       setIsProcessing(false);
     }
   };
 
+  // Tidak ada jalur yang dapat menetapkan lunas dari browser, termasuk development.
   const handleConfirmMayarPaid = () => {
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-
-      // Trigger Confetti Celebration!
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } catch (err) {
-        console.error('Confetti error:', err);
-      }
-
-      const completedOrder: CompletedOrder = {
-        orderId: `ORD-${Date.now().toString().slice(-6)}`,
-        customer: {
-          fullName,
-          whatsapp,
-          email,
-          province,
-          city,
-          subdistrict,
-          addressDetail,
-          courier: hasPhysical ? selectedCourier : undefined,
-          paymentMethod,
-        },
-        items,
-        subtotal,
-        shippingCost,
-        grandTotal,
-        paymentStatus: 'PAID',
-        paidAt: new Date().toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        invoiceUrl: `https://zaidly.mayar.shop/invoices/inv-${Date.now()}`,
-        digitalDownloads: items
-          .filter((i) => i.product.type === 'DIGITAL_EBOOK')
-          .map((i) => ({
-            productId: i.product.id,
-            productTitle: i.product.title,
-            fileName: `${i.product.slug}.pdf`,
-            fileSizeMb: i.product.fileSizeMb || 12.5,
-            downloadToken: `r2_token_${Math.random().toString(36).substring(2, 10)}`,
-            expiresInHours: 24,
-          })),
-        shippingAwb: hasPhysical
-          ? {
-              courierName: selectedCourier.courierName,
-              awbNumber: `${selectedCourier.courierCode}ID${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-              status: 'Menunggu Penjemputan Kurir',
-              estimatedDelivery: selectedCourier.etd,
-            }
-          : undefined,
-      };
-
-      onOrderSuccess(completedOrder);
-      onClose();
-    }, 1200);
+    setPaymentError('Status pembayaran hanya dapat dikonfirmasi oleh webhook Mayar yang terverifikasi.');
+    setStep('form');
   };
 
   return (
@@ -383,7 +355,9 @@ export default function CheckoutModal({
                           <Truck className="w-3.5 h-3.5 text-[#DE5A35]" />
                           <span>2. Alamat Kirim (KiriminAja)</span>
                         </h3>
-                        <span className="text-[10px] text-[#19583E] font-bold">API Real-Time</span>
+                        <span className="text-[10px] text-[#19583E] font-bold">
+                          {rateSource === 'KIRIMINAJA_API_LIVE' ? 'Tarif KiriminAja' : rateSource ? 'Estimasi tarif' : ''}
+                        </span>
                       </div>
 
                       <div className="bg-white/80 p-2 rounded-xl text-[11px] text-[#595959] border border-[#E6E1D8] flex items-center justify-between">
@@ -523,8 +497,18 @@ export default function CheckoutModal({
                           Pilihan Layanan Ekspedisi:
                         </label>
                         <div className="space-y-1.5">
+                          {isLoadingRates && (
+                            <p className="text-[11px] text-[#7A7A7A] flex items-center gap-1.5">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Menghitung ongkir...
+                            </p>
+                          )}
+                          {!isLoadingRates && courierRates.length === 0 && (
+                            <p className="text-[11px] text-red-500">
+                              Ongkir belum tersedia. Isi kode pos / kecamatan untuk menghitung ongkir.
+                            </p>
+                          )}
                           {courierRates.map((rate) => {
-                            const isSelected = selectedCourier.courierCode === rate.courierCode;
+                            const isSelected = selectedCourier?.courierCode === rate.courierCode;
                             return (
                               <label
                                 key={rate.courierCode}
@@ -622,12 +606,32 @@ export default function CheckoutModal({
                     </div>
                   </div>
 
+                  {paymentError && (
+                    <div
+                      role="alert"
+                      className="p-3 bg-red-50 border border-red-200 rounded-xl text-[11px] text-red-700 font-medium"
+                    >
+                      {paymentError}
+                    </div>
+                  )}
+
                   <button
+                    id="checkout-submit-btn"
                     type="submit"
-                    className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    disabled={isProcessing || (hasPhysical && (!selectedCourier || isLoadingRates))}
+                    className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   >
-                    <span>Lanjut Bayar</span>
-                    <ArrowRight className="w-4 h-4" />
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Membuat tagihan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Lanjut Bayar</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
 
                   <div className="p-3 bg-white rounded-xl border border-[#E6E1D8] text-[11px] text-[#7A7A7A] space-y-1">
@@ -650,8 +654,8 @@ export default function CheckoutModal({
               </div>
 
               <div>
-                <span className="text-xs font-bold text-[#7A7A7A] uppercase tracking-wider">
-                  Selesaikan Pembayaran
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  Mode Simulasi Pengembangan (bukan pembayaran asli)
                 </span>
                 <h3 className="text-xl font-bold text-[#222222] font-serif-title mt-0.5">
                   Total Tagihan: {formatIDR(grandTotal)}

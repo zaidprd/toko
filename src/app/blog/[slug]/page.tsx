@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { INITIAL_BLOG_POSTS, INITIAL_PRODUCTS } from '@/data/mockData';
+import { INITIAL_BLOG_POSTS } from '@/data/mockData';
 import BlogPostReader from '@/components/BlogPostReader';
+import { getBlogPosts, getProducts } from '@/lib/catalog';
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -17,7 +18,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = INITIAL_BLOG_POSTS.find((p) => p.slug === slug);
+  const post = (await getBlogPosts()).find((p) => p.slug === slug);
 
   if (!post) {
     return {
@@ -63,8 +64,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = INITIAL_BLOG_POSTS.find((p) => p.slug === slug) || null;
-  const relatedProducts = INITIAL_PRODUCTS.slice(0, 3);
+  const post = (await getBlogPosts()).find((p) => p.slug === slug) || null;
+  const relatedProducts = (await getProducts()).slice(0, 3);
 
   const jsonLd = post
     ? {

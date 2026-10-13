@@ -31,22 +31,12 @@ export default function BlogPostReader({
   const [post, setPost] = useState<BlogPost | null>(serverPost);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Check localStorage for newly created/edited articles
+  // Check the shared server catalog for newly created/edited articles.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('zaidly_blog_posts');
-      if (saved) {
-        const parsed: BlogPost[] = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const match = parsed.find((p) => p.slug === slug);
-          if (match) {
-            setPost(match);
-          }
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    fetch('/api/blogs').then((r) => r.json()).then((data) => {
+      const match = (data.posts as BlogPost[] | undefined)?.find((item) => item.slug === slug);
+      if (match) setPost(match);
+    }).catch(console.error);
   }, [slug]);
 
   if (!post) {

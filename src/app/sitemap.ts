@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
-import { INITIAL_PRODUCTS, INITIAL_BLOG_POSTS } from '@/data/mockData';
+import { getProducts, getBlogPosts } from '@/lib/catalog';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://toko.zaidly.com';
 
   // 1. Static Pages
@@ -27,7 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // 2. Product Pages
-  const productRoutes: MetadataRoute.Sitemap = INITIAL_PRODUCTS.map((prod) => ({
+  const productRoutes: MetadataRoute.Sitemap = (await getProducts()).map((prod) => ({
     url: `${baseUrl}/products/${prod.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
@@ -35,7 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // 3. Blog Post Pages
-  const blogRoutes: MetadataRoute.Sitemap = INITIAL_BLOG_POSTS.map((post) => ({
+  const blogRoutes: MetadataRoute.Sitemap = (await getBlogPosts()).map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(),
     changeFrequency: 'monthly',

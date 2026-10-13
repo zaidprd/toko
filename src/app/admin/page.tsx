@@ -93,6 +93,10 @@ export default function AdminPage() {
   const [targetAge, setTargetAge] = useState<TargetAge>('4-6 Tahun');
   const [shortDescription, setShortDescription] = useState('');
   const [descriptionHtml, setDescriptionHtml] = useState('');
+  const [ebookFile, setEbookFile] = useState<File | null>(null);
+  const [mayarDeliveryUrl, setMayarDeliveryUrl] = useState('');
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [uploadStatusText, setUploadStatusText] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   // ==========================================
@@ -140,25 +144,11 @@ export default function AdminPage() {
 
     checkAuth();
 
-    // Load persisted products
-    try {
-      const saved = localStorage.getItem('zaidly_products');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProducts(parsed);
-        }
-      }
-      const savedBlogs = localStorage.getItem('zaidly_blog_posts');
-      if (savedBlogs) {
-        const parsedBlogs = JSON.parse(savedBlogs);
-        if (Array.isArray(parsedBlogs) && parsedBlogs.length > 0) {
-          setBlogPosts(parsedBlogs);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    Promise.all([fetch('/api/products').then((r) => r.json()), fetch('/api/blogs').then((r) => r.json())])
+      .then(([catalog, blog]) => {
+        if (Array.isArray(catalog.products)) setProducts(catalog.products);
+        if (Array.isArray(blog.posts)) setBlogPosts(blog.posts);
+      }).catch(console.error);
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -200,22 +190,18 @@ export default function AdminPage() {
     setLoginPassword('');
   };
 
-  const saveProductsList = (newList: Product[]) => {
-    setProducts(newList);
-    try {
-      localStorage.setItem('zaidly_products', JSON.stringify(newList));
-    } catch (e) {
-      console.error(e);
-    }
+  const saveProductToServer = async (product: Product) => {
+    const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(product) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Produk gagal disimpan.');
+    setProducts((current) => [product, ...current.filter((item) => item.id !== product.id)]);
   };
 
-  const saveBlogList = (newList: BlogPost[]) => {
-    setBlogPosts(newList);
-    try {
-      localStorage.setItem('zaidly_blog_posts', JSON.stringify(newList));
-    } catch (e) {
-      console.error(e);
-    }
+  const saveBlogToServer = async (post: BlogPost) => {
+    const res = await fetch('/api/blogs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(post) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Artikel gagal disimpan.');
+    setBlogPosts((current) => [post, ...current.filter((item) => item.id !== post.id)]);
   };
 
   // ==========================================
@@ -368,6 +354,9 @@ export default function AdminPage() {
     setTargetAge('4-6 Tahun');
     setShortDescription('');
     setDescriptionHtml('');
+    setEbookFile(null);
+    setMayarDeliveryUrl('');
+    setUploadStatusText('');
   };
 
   const handleStartAdd = () => {
@@ -400,16 +389,17 @@ export default function AdminPage() {
     setActiveTab('form');
   };
 
-  const handleDeleteProduct = (id: string, prodTitle: string) => {
+  const handleDeleteProduct = async (id: string, prodTitle: string) => {
     if (confirm(`Yakin ingin menghapus produk "${prodTitle}" dari katalog toko?`)) {
-      const updated = products.filter((p) => p.id !== id);
-      saveProductsList(updated);
+      const res = await fetch(`/api/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) return alert('Produk gagal dihapus dari server.');
+      setProducts((current) => current.filter((p) => p.id !== id));
       setSuccessMessage(`Produk "${prodTitle}" berhasil dihapus.`);
       setTimeout(() => setSuccessMessage(''), 3000);
     }
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim()) {
@@ -467,19 +457,65 @@ export default function AdminPage() {
       fileSizeMb: type === 'DIGITAL_EBOOK' ? 15 : undefined,
     };
 
-    let updatedList: Product[];
-    if (editingId) {
-      updatedList = products.map((p) => (p.id === editingId ? newProd : p));
-      setSuccessMessage('Produk berhasil diperbarui!');
-    } else {
-      updatedList = [newProd, ...products];
-      setSuccessMessage('Produk baru berhasil ditambahkan!');
-    }
+    setIsSavingProduct(true);
+    setUploadStatusText('Menyimpan informasi produk...');
 
-    saveProductsList(updatedList);
-    setActiveTab('list');
-    resetForm();
-    setTimeout(() => setSuccessMessage(''), 3000);
+    try {
+      await saveProductToServer(newProd);
+      if (newProd.type === 'DIGITAL_EBOOK' && ebookFile) {
+        setUploadStatusText('Menyiapkan koneksi ke Cloudflare R2...');
+        const signRes = await fetch('/api/admin/ebooks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: newProd.id,
+            fileName: ebookFile.name,
+            size: ebookFile.size,
+            type: ebookFile.type,
+          }),
+        });
+        const signed = await signRes.json();
+        if (!signRes.ok) throw new Error(signed.error || 'Upload PDF gagal disiapkan.');
+
+        const sizeMb = (ebookFile.size / (1024 * 1024)).toFixed(1);
+        setUploadStatusText(`Mengunggah berkas PDF ke Cloudflare R2 (${sizeMb} MB)...`);
+        const uploadRes = await fetch(signed.uploadUrl, {
+          method: 'PUT',
+          body: ebookFile,
+          headers: { 'Content-Type': 'application/pdf' },
+        });
+        if (!uploadRes.ok) throw new Error('Upload PDF ke Cloudflare R2 gagal.');
+
+        setUploadStatusText('Menyimpan metadata ke database Supabase...');
+        const confirmRes = await fetch('/api/admin/ebooks', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: newProd.id,
+            objectKey: signed.objectKey,
+            fileName: ebookFile.name,
+            size: ebookFile.size,
+            mayarDeliveryUrl: mayarDeliveryUrl.trim() || null,
+          }),
+        });
+        if (!confirmRes.ok) throw new Error('Metadata PDF gagal disimpan.');
+      }
+
+      if (editingId) {
+        setSuccessMessage('Produk berhasil diperbarui!');
+      } else {
+        setSuccessMessage('Produk baru berhasil ditambahkan!');
+      }
+
+      setActiveTab('list');
+      resetForm();
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Produk gagal disimpan.');
+    } finally {
+      setIsSavingProduct(false);
+      setUploadStatusText('');
+    }
   };
 
   // ==========================================
@@ -552,16 +588,17 @@ export default function AdminPage() {
     setBlogTab('form');
   };
 
-  const handleDeleteBlog = (id: string, postTitle: string) => {
+  const handleDeleteBlog = async (id: string, postTitle: string) => {
     if (confirm(`Yakin ingin menghapus artikel "${postTitle}" dari blog toko?`)) {
-      const updated = blogPosts.filter((b) => b.id !== id);
-      saveBlogList(updated);
+      const res = await fetch(`/api/blogs?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) return alert('Artikel gagal dihapus dari server.');
+      setBlogPosts((current) => current.filter((b) => b.id !== id));
       setSuccessMessage(`Artikel "${postTitle}" berhasil dihapus.`);
       setTimeout(() => setSuccessMessage(''), 3000);
     }
   };
 
-  const handleSaveBlog = (e: React.FormEvent) => {
+  const handleSaveBlog = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!blogTitle.trim()) {
@@ -603,16 +640,16 @@ export default function AdminPage() {
       tags: parsedTags.length > 0 ? parsedTags : ['Edukasi Sunnah', 'Parenting'],
     };
 
-    let updatedList: BlogPost[];
     if (editingBlogId) {
-      updatedList = blogPosts.map((b) => (b.id === editingBlogId ? newPost : b));
       setSuccessMessage('Artikel berhasil diperbarui!');
     } else {
-      updatedList = [newPost, ...blogPosts];
       setSuccessMessage('Artikel baru berhasil dipublikasikan!');
     }
 
-    saveBlogList(updatedList);
+    try { await saveBlogToServer(newPost); } catch (error) {
+      alert(error instanceof Error ? error.message : 'Artikel gagal disimpan.');
+      return;
+    }
     setBlogTab('list');
     resetBlogForm();
     setTimeout(() => setSuccessMessage(''), 3000);
@@ -1407,8 +1444,79 @@ export default function AdminPage() {
                           </div>
                         </>
                       ) : (
-                        <div className="sm:col-span-2 flex items-center p-3 bg-[#E8F4EC] rounded-xl border border-[#19583E]/20 text-xs text-[#19583E]">
-                          <span>⚡ <strong>Produk Digital:</strong> Bebas ongkir &amp; langsung aktif link unduhan file PDF.</span>
+                        <div className="sm:col-span-2 space-y-3 p-4 bg-[#E8F4EC] rounded-2xl border-2 border-[#19583E]/20 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[#19583E] flex items-center gap-1.5">
+                              <span>⚡ Unggah Berkas PDF Ebook (Cloudflare R2)</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-[#19583E] bg-white px-2 py-0.5 rounded-full border border-[#19583E]/20">
+                              Penyimpanan Privat R2
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#19583E]/90 leading-relaxed">
+                            Berkas PDF akan diunggah langsung ke penyimpanan Cloudflare R2 privat toko Anda. Tautan unduh hanya dibuatkan secara otomatis untuk pembeli yang statusnya <strong>LUNAS (PAID)</strong> dengan masa aktif 10 menit agar aman dari penyebaran liar.
+                          </p>
+
+                          <div className="bg-white p-3.5 rounded-xl border border-[#19583E]/30 space-y-2.5">
+                            <label className="text-[11px] font-bold text-[#222222] block">
+                              Pilih Berkas PDF Asli (Maks. 50 MB):
+                            </label>
+
+                            {ebookFile ? (
+                              <div className="flex items-center justify-between p-2.5 bg-[#FAF7F2] rounded-xl border border-[#E6E1D8]">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="w-8 h-8 rounded-lg bg-[#DE5A35]/10 text-[#DE5A35] flex items-center justify-center shrink-0 font-bold text-[10px]">
+                                    PDF
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-bold text-xs text-[#222222] truncate">
+                                      {ebookFile.name}
+                                    </div>
+                                    <div className="text-[10px] text-[#7A7A7A]">
+                                      {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB • Siap diunggah ke Cloudflare R2
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setEbookFile(null)}
+                                  className="text-[11px] font-bold text-red-600 hover:text-red-700 ml-2 shrink-0 cursor-pointer"
+                                >
+                                  Ganti File
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="relative border-2 border-dashed border-[#19583E]/40 rounded-xl p-4 text-center hover:bg-[#FAF7F2] transition-colors cursor-pointer">
+                                <input
+                                  type="file"
+                                  accept="application/pdf,.pdf"
+                                  onChange={(e) => setEbookFile(e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <div className="space-y-1">
+                                  <p className="text-xs font-bold text-[#19583E]">
+                                    + Klik untuk Memilih Berkas PDF dari Perangkat
+                                  </p>
+                                  <p className="text-[10px] text-[#7A7A7A]">
+                                    Format .pdf • Ukuran maksimal 50 MB
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-1 pt-1">
+                            <label className="text-[10px] font-semibold text-[#595959] block">
+                              Tautan Delivery Mayar (Opsional):
+                            </label>
+                            <input
+                              type="url"
+                              value={mayarDeliveryUrl}
+                              onChange={(e) => setMayarDeliveryUrl(e.target.value)}
+                              placeholder="https://... (Opsional jika ingin menyertakan tautan Mayar)"
+                              className="w-full bg-white border border-[#19583E]/20 rounded-xl px-3 py-2 text-xs text-[#222] outline-none"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1462,10 +1570,20 @@ export default function AdminPage() {
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2.5 bg-[#DE5A35] hover:bg-[#C54724] text-white text-xs font-bold rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                      disabled={isSavingProduct}
+                      className="px-6 py-2.5 bg-[#DE5A35] hover:bg-[#C54724] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Save className="w-3.5 h-3.5" />
-                      <span>{editingId ? 'Simpan Perubahan' : 'Tambahkan ke Katalog'}</span>
+                      {isSavingProduct ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>{uploadStatusText || 'Menyimpan...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-3.5 h-3.5" />
+                          <span>{editingId ? 'Simpan Perubahan' : 'Tambahkan ke Katalog'}</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
