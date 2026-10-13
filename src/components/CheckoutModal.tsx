@@ -15,6 +15,7 @@ import {
   Lock,
   ArrowRight,
   Loader2,
+  Search,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -39,7 +40,11 @@ export default function CheckoutModal({
   const [province, setProvince] = useState('DKI Jakarta');
   const [city, setCity] = useState('Kota Jakarta Barat');
   const [subdistrict, setSubdistrict] = useState('Kebon Jeruk');
+  const [postalCode, setPostalCode] = useState('11550');
   const [addressDetail, setAddressDetail] = useState('');
+  const [isSearchingPostal, setIsSearchingPostal] = useState(false);
+  const [postalSuggestions, setPostalSuggestions] = useState<any[]>([]);
+  const [postalError, setPostalError] = useState('');
   const [courierRates, setCourierRates] = useState<CourierRate[]>(MOCK_COURIER_RATES);
   const [selectedCourier, setSelectedCourier] = useState<CourierRate>(MOCK_COURIER_RATES[0]);
 
@@ -65,6 +70,78 @@ export default function CheckoutModal({
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const executePostalLookup = async (query: string) => {
+    if (!query || query.trim().length < 3) return;
+    setIsSearchingPostal(true);
+    setPostalError('');
+    try {
+      const res = await fetch(`/api/shipping/postal-code?q=${encodeURIComponent(query.trim())}`);
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        setPostalSuggestions(data.results);
+        if (data.results.length === 1 || /^\d{5}$/.test(query.trim())) {
+          applyPostalSelection(data.results[0]);
+        }
+      } else {
+        setPostalError('Wilayah tidak ditemukan via kode pos ini. Silakan pilih provinsi & kota manual.');
+        setPostalSuggestions([]);
+      }
+    } catch (e) {
+      console.error(e);
+      setPostalError('Gagal mencari wilayah. Silakan gunakan pilihan manual.');
+    } finally {
+      setIsSearchingPostal(false);
+    }
+  };
+
+  const applyPostalSelection = (item: {
+    postalCode: string;
+    village: string;
+    district: string;
+    regency: string;
+    province: string;
+  }) => {
+    setPostalCode(item.postalCode);
+    setPostalSuggestions([]);
+    setPostalError('');
+
+    // 1. Cocokkan Provinsi
+    const matchedProv = INDONESIA_PROVINCES.find(
+      (p) =>
+        p.name.toLowerCase().includes(item.province.toLowerCase()) ||
+        item.province.toLowerCase().includes(p.name.toLowerCase())
+    ) || INDONESIA_PROVINCES[0];
+    setProvince(matchedProv.name);
+
+    // 2. Cocokkan Kota
+    const cleanRegency = item.regency.replace(/^(Kab\.|Kota|Kabupaten|Administrasi)\s+/i, '').toLowerCase();
+    const matchedCity = matchedProv.cities.find(
+      (c) =>
+        c.name.toLowerCase().includes(cleanRegency) ||
+        cleanRegency.includes(c.name.replace(/^(Kab\.|Kota|Kabupaten|Administrasi)\s+/i, '').toLowerCase())
+    ) || matchedProv.cities[0] || { name: item.regency };
+    setCity(matchedCity.name);
+
+    // 3. Set Kecamatan
+    setSubdistrict(item.district);
+
+    // 4. Pre-fill Alamat Lengkap & Patokan Rumah (agar pembeli tinggal isi nomor rumah)
+    setAddressDetail((prev) => {
+      if (prev && prev.trim().length > 15) return prev;
+      return `Kelurahan ${item.village}, RT ... / RW ..., No. `;
+    });
+
+    // 5. Update Tarif Ekspedisi
+    updateRatesForDestination(matchedProv.name, matchedCity.name, item.district);
+  };
+
+  const handlePostalCodeChange = (val: string) => {
+    setPostalCode(val);
+    if (val.trim().length === 5 && /^\d{5}$/.test(val.trim())) {
+      executePostalLookup(val.trim());
     }
   };
 
@@ -314,11 +391,67 @@ export default function CheckoutModal({
                         <span className="text-[10px] text-[#1F6347] font-bold">JNE, J&T, SiCepat</span>
                       </div>
 
+                      {/* Pencarian Cepat via Kode Pos (Otomatis Isi Alamat) */}
+                      <div className="bg-[#FAF7F2] p-3 rounded-2xl border border-[#E6E1D8] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-bold text-[#222222] flex items-center gap-1.5">
+                            <span>📮 Cari Cepat via Kode Pos (Otomatis Isi Alamat)</span>
+                          </label>
+                          {isSearchingPostal && (
+                            <span className="text-[10px] text-[#DE5A35] animate-pulse font-medium flex items-center gap-1">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Mencari wilayah...
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            maxLength={5}
+                            value={postalCode}
+                            onChange={(e) => handlePostalCodeChange(e.target.value)}
+                            placeholder="Ketik 5 digit kode pos (misal: 11550, 22919, 40115)..."
+                            className="flex-1 bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none font-semibold"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => executePostalLookup(postalCode)}
+                            className="px-3.5 py-2 bg-[#DE5A35] hover:bg-[#C54724] text-white text-xs font-bold rounded-xl cursor-pointer shrink-0 transition-colors flex items-center gap-1"
+                          >
+                            <Search className="w-3.5 h-3.5" />
+                            <span>Cari</span>
+                          </button>
+                        </div>
+                        {postalError && (
+                          <p className="text-[10px] text-red-500">{postalError}</p>
+                        )}
+                        {postalSuggestions.length > 0 && (
+                          <div className="bg-white border border-[#E6E1D8] rounded-xl p-2 space-y-1 max-h-40 overflow-y-auto shadow-sm">
+                            <p className="text-[10px] text-[#7A7A7A] font-semibold">Pilih Wilayah Anda:</p>
+                            {postalSuggestions.map((s, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => applyPostalSelection(s)}
+                                className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-[#FAF7F2] flex items-center justify-between border-b border-[#F0ECE1] last:border-0 cursor-pointer transition-colors"
+                              >
+                                <span className="font-semibold text-[#222222]">
+                                  Kel. {s.village}, Kec. {s.district}
+                                </span>
+                                <span className="text-[10px] text-[#7A7A7A]">
+                                  {s.regency}, {s.province} ({s.postalCode})
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       {/* Pilihan Wilayah Pengiriman Lengkap */}
                       <div className="space-y-2.5">
                         <div>
                           <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                            Pilih Provinsi
+                            Provinsi
                           </label>
                           <select
                             value={province}
@@ -336,7 +469,7 @@ export default function CheckoutModal({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
                             <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                              Pilih Kota / Kabupaten ({availableCities.length} Wilayah)
+                              Kota / Kabupaten ({availableCities.length} Wilayah)
                             </label>
                             <select
                               value={city}
@@ -353,14 +486,14 @@ export default function CheckoutModal({
 
                           <div>
                             <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                              Kecamatan (Ketik Nama Kecamatan)
+                              Kecamatan
                             </label>
                             <input
                               type="text"
                               required
                               value={subdistrict}
                               onChange={(e) => handleDistrictChange(e.target.value)}
-                              placeholder="Contoh: Depok, Kebon Jeruk, Sukajadi..."
+                              placeholder="Ketik nama kecamatan..."
                               className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
                             />
                           </div>
@@ -368,9 +501,12 @@ export default function CheckoutModal({
                       </div>
 
                       <div>
-                        <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                          Alamat Lengkap &amp; Patokan Rumah
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-semibold text-[#595959]">
+                            Alamat Lengkap &amp; Patokan Rumah
+                          </label>
+                          <span className="text-[10px] text-[#7A7A7A]">Lengkapi nomor rumah &amp; RT/RW</span>
+                        </div>
                         <textarea
                           required
                           rows={2}
@@ -384,7 +520,7 @@ export default function CheckoutModal({
                       {/* Ekspedisi Pilihan */}
                       <div className="pt-2">
                         <label className="text-[11px] font-bold text-[#222222] mb-1.5 block">
-                          Pilih Layanan Ekspedisi (Kalkulasi Otomatis dari Kebon Jeruk):
+                          Pilihan Layanan Ekspedisi:
                         </label>
                         <div className="space-y-1.5">
                           {courierRates.map((rate) => {
@@ -430,69 +566,11 @@ export default function CheckoutModal({
                       <div>
                         <h4 className="text-xs font-bold text-[#19583E]">Produk Digital (Tanpa Ongkir)</h4>
                         <p className="text-[11px] text-[#19583E]/90 mt-0.5">
-                          Keranjang Anda 100% berisi ebook printable. File PDF akan langsung aktif untuk diunduh segera setelah pembayaran terkonfirmasi via Mayar.
+                          Keranjang Anda 100% berisi ebook printable. File PDF akan langsung aktif untuk diunduh segera setelah pembayaran terkonfirmasi.
                         </p>
                       </div>
                     </div>
                   )}
-
-                  {/* Pilihan Metode Pembayaran via Mayar */}
-                  <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#E6E1D8] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-bold text-[#222222] uppercase tracking-wider flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-[#1F6347]" />
-                        <span>3. Metode Pembayaran (Mayar.id)</span>
-                      </h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <label
-                        className={`p-3 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${
-                          paymentMethod === 'QRIS'
-                            ? 'bg-white border-[#DE5A35] shadow-xs'
-                            : 'bg-white/70 border-[#E6E1D8]'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          checked={paymentMethod === 'QRIS'}
-                          onChange={() => setPaymentMethod('QRIS')}
-                          className="accent-[#DE5A35]"
-                        />
-                        <div>
-                          <div className="text-xs font-bold text-[#222222] flex items-center gap-1">
-                            <QrCode className="w-3.5 h-3.5 text-[#DE5A35]" />
-                            <span>QRIS Instan</span>
-                          </div>
-                          <div className="text-[10px] text-[#7A7A7A]">BSI, BCA, GoPay, ShopeePay</div>
-                        </div>
-                      </label>
-
-                      <label
-                        className={`p-3 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${
-                          paymentMethod === 'VA_BSI'
-                            ? 'bg-white border-[#DE5A35] shadow-xs'
-                            : 'bg-white/70 border-[#E6E1D8]'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          checked={paymentMethod === 'VA_BSI'}
-                          onChange={() => setPaymentMethod('VA_BSI')}
-                          className="accent-[#DE5A35]"
-                        />
-                        <div>
-                          <div className="text-xs font-bold text-[#222222] flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-[#1F6347]" />
-                            <span>VA Bank Syariah</span>
-                          </div>
-                          <div className="text-[10px] text-[#7A7A7A]">BSI Virtual Account</div>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Right: Order Summary */}
@@ -548,7 +626,7 @@ export default function CheckoutModal({
                     type="submit"
                     className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   >
-                    <span>Lanjut Bayar via Mayar.id</span>
+                    <span>Lanjut Bayar</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -565,7 +643,7 @@ export default function CheckoutModal({
               </div>
             </form>
           ) : (
-            /* Step 2: Mayar.id Gateway Simulation */
+            /* Step 2: Payment Gateway Simulation */
             <div className="max-w-md mx-auto space-y-5 text-center py-4">
               <div className="w-12 h-12 rounded-2xl bg-[#DE5A35]/10 text-[#DE5A35] flex items-center justify-center mx-auto">
                 <Lock className="w-6 h-6" />
@@ -573,10 +651,10 @@ export default function CheckoutModal({
 
               <div>
                 <span className="text-xs font-bold text-[#7A7A7A] uppercase tracking-wider">
-                  Mayar.id Secure Checkout
+                  Selesaikan Pembayaran
                 </span>
                 <h3 className="text-xl font-bold text-[#222222] font-serif-title mt-0.5">
-                  Selesaikan Pembayaran {formatIDR(grandTotal)}
+                  Total Tagihan: {formatIDR(grandTotal)}
                 </h3>
                 <p className="text-xs text-[#595959] mt-1">
                   Tagihan untuk {fullName} ({email})
@@ -588,22 +666,21 @@ export default function CheckoutModal({
                 {paymentMethod === 'QRIS' ? (
                   <>
                     <div className="w-48 h-48 bg-white mx-auto rounded-2xl p-2.5 shadow-sm border border-[#E6E1D8] flex flex-col items-center justify-center">
-                      {/* Simulating QRIS Code Pattern */}
                       <div className="w-full h-full bg-[#222222] rounded-xl flex items-center justify-center text-white text-[10px] font-mono p-3 text-center">
                         <div className="space-y-1">
                           <QrCode className="w-16 h-16 mx-auto text-white" />
-                          <span className="block font-bold">QRIS NATIONAL MAYAR</span>
+                          <span className="block font-bold">QRIS RESMI TOKO</span>
                           <span className="text-[8px] opacity-80">NMID: ID10202688921ZAID</span>
                         </div>
                       </div>
                     </div>
                     <p className="text-xs font-semibold text-[#222222]">
-                      Pindai QRIS menggunakan aplikasi Bank Syariah (BSI), BCA, atau E-Wallet
+                      Pindai QRIS menggunakan Mobile Banking atau E-Wallet
                     </p>
                   </>
                 ) : (
                   <div className="bg-white p-4 rounded-2xl border border-[#E6E1D8] text-left space-y-2">
-                    <div className="text-[11px] text-[#7A7A7A]">Nomor Virtual Account BSI:</div>
+                    <div className="text-[11px] text-[#7A7A7A]">Nomor Virtual Account:</div>
                     <div className="text-lg font-mono font-black text-[#1F6347] tracking-wider">
                       8912 0812 3456 7890
                     </div>
@@ -615,7 +692,7 @@ export default function CheckoutModal({
 
                 <div className="text-[11px] text-[#7A7A7A] flex items-center justify-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#1F6347]" />
-                  <span>Sistem mendeteksi pembayaran secara otomatis via Webhook Mayar</span>
+                  <span>Sistem mendeteksi pembayaran secara otomatis</span>
                 </div>
               </div>
 

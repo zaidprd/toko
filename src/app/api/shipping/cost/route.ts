@@ -17,6 +17,30 @@ export async function POST(req: Request) {
 
     let liveRates: any[] = [];
 
+    const destStr = `${destinationProvince || ''} ${destinationCity || ''} ${destinationDistrict || ''}`.toLowerCase();
+
+    // Tentukan ID Tujuan KiriminAja berdasarkan Zona Pengiriman Resmi Indonesia
+    let destinationId = 5783; // default Jakarta (Kebon Jeruk)
+    if (destStr.includes('sumatera') || destStr.includes('aceh') || destStr.includes('medan') || destStr.includes('mandailing') || destStr.includes('riau') || destStr.includes('lampung') || destStr.includes('padang') || destStr.includes('palembang') || destStr.includes('jambi') || destStr.includes('bengkulu') || destStr.includes('bangka')) {
+      destinationId = 2000;
+    } else if (destStr.includes('kalimantan') || destStr.includes('pontianak') || destStr.includes('banjarmasin') || destStr.includes('samarinda') || destStr.includes('balikpapan')) {
+      destinationId = 2500;
+    } else if (destStr.includes('sulawesi') || destStr.includes('makassar') || destStr.includes('manado') || destStr.includes('palu') || destStr.includes('kendari') || destStr.includes('gorontalo')) {
+      destinationId = 3000;
+    } else if (destStr.includes('bali') || destStr.includes('nusa tenggara') || destStr.includes('denpasar') || destStr.includes('mataram') || destStr.includes('kupang')) {
+      destinationId = 3500;
+    } else if (destStr.includes('papua') || destStr.includes('maluku') || destStr.includes('ambon') || destStr.includes('jayapura')) {
+      destinationId = 4000;
+    } else if (destStr.includes('jawa timur') || destStr.includes('surabaya') || destStr.includes('malang') || destStr.includes('sidoarjo')) {
+      destinationId = 1600;
+    } else if (destStr.includes('jawa tengah') || destStr.includes('yogyakarta') || destStr.includes('semarang') || destStr.includes('solo') || destStr.includes('sleman')) {
+      destinationId = 1400;
+    } else if (destStr.includes('jawa barat') || destStr.includes('banten') || destStr.includes('bandung') || destStr.includes('bogor') || destStr.includes('tangerang') || destStr.includes('bekasi') || destStr.includes('depok') || destStr.includes('serang')) {
+      destinationId = 1200;
+    } else {
+      destinationId = 5783;
+    }
+
     // Jika API Key KiriminAja tersedia, hubungi endpoint resmi KiriminAja Sandbox (POST /api/mitra/v6.1/shipping_price)
     if (apiKey && apiKey.trim() !== '' && !apiKey.includes('your_kiriminaja')) {
       try {
@@ -29,7 +53,7 @@ export async function POST(req: Request) {
           },
           body: JSON.stringify({
             origin: 5783, // District ID Kebon Jeruk, Jakarta Barat
-            destination: 5783, // District ID Tujuan
+            destination: destinationId, // District ID Tujuan sesuai zona pembeli
             weight: Math.max(100, Number(weightGrams) || 1000),
             insurance: 0,
           }),
@@ -47,15 +71,34 @@ export async function POST(req: Request) {
               sap: 'SAP Express',
             };
 
-            liveRates = apiData.results
-              .filter((r: any) => ['sicepat', 'ninja', 'jne', 'jnt'].includes(r.service?.toLowerCase()))
-              .map((r: any) => ({
-                courierCode: (r.service || 'EXP').toUpperCase(),
-                courierName: courierMap[r.service?.toLowerCase()] || r.service,
-                service: `${r.service_type || 'REG'} (KiriminAja Live)`,
-                etd: r.etd ? `${r.etd} Hari` : '2-3 Hari',
-                cost: Number(r.cost) || 10000,
-              }));
+            const seen = new Set<string>();
+            const uniqueRates: any[] = [];
+
+            for (const r of apiData.results) {
+              const cKey = (r.service || '').toLowerCase();
+              const sType = (r.service_type || 'REG').toUpperCase();
+
+              // Hindari tarif kargo/truk berat di etalase reguler jika paket di bawah 5kg
+              if (sType.includes('GOKIL') || sType.includes('CARGO') || sType.includes('TRUCKING') || sType.includes('JTR')) {
+                continue;
+              }
+
+              const dedupeKey = `${cKey}_${sType}`;
+              if (!seen.has(dedupeKey) && ['sicepat', 'jnt', 'jne', 'ninja'].includes(cKey)) {
+                seen.add(dedupeKey);
+                uniqueRates.push({
+                  courierCode: dedupeKey.toUpperCase(),
+                  courierName: courierMap[cKey] || r.service,
+                  service: sType,
+                  etd: r.etd ? `${r.etd} Hari` : '2-3 Hari',
+                  cost: Number(r.cost) || 10000,
+                });
+              }
+            }
+
+            if (uniqueRates.length > 0) {
+              liveRates = uniqueRates;
+            }
           }
         }
       } catch (err) {
@@ -69,6 +112,7 @@ export async function POST(req: Request) {
         success: true,
         source: 'KIRIMINAJA_API_SANDBOX_LIVE',
         origin: STORE_ORIGIN,
+        destinationId,
         weightGrams,
         rates: liveRates,
       });
