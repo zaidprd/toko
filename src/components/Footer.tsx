@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BookOpen, ShieldCheck, Heart, Sparkles } from 'lucide-react';
+import { BookOpen, ShieldCheck, Sparkles } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -84,13 +84,8 @@ export default function Footer() {
       </div>
 
       {/* Copyright Bar */}
-      <div className="border-t border-[#E6E1D8] py-4 px-4 text-center text-[11px] text-[#7A7A7A] flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto">
+      <div className="border-t border-[#E6E1D8] py-4 px-4 text-center text-[11px] text-[#7A7A7A] max-w-7xl mx-auto">
         <p>© 2026 toko.zaidly.com. Hak cipta dilindungi undang-undang &amp; syariat.</p>
-        <p className="flex items-center gap-1 mt-1 sm:mt-0">
-          <span>Dibuat dengan</span>
-          <Heart className="w-3.5 h-3.5 text-[#DE5A35] fill-[#DE5A35]" />
-          <span>untuk buah hati kaum muslimin.</span>
-        </p>
       </div>
     </footer>
   );
