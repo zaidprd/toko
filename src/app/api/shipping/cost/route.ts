@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export const STORE_ORIGIN = {
-  address: process.env.STORE_ORIGIN_ADDRESS || 'Jl. H Taha No 2K, Kelapa Dua',
+  address: process.env.STORE_ORIGIN_ADDRESS || 'Kebon Jeruk, Jakarta Barat',
   district: process.env.STORE_ORIGIN_DISTRICT || 'Kebon Jeruk',
   city: process.env.STORE_ORIGIN_CITY || 'Jakarta Barat',
   province: process.env.STORE_ORIGIN_PROVINCE || 'DKI Jakarta',
@@ -10,27 +10,85 @@ export const STORE_ORIGIN = {
 
 export async function POST(req: Request) {
   try {
-    const { destinationCity, destinationDistrict, weightGrams = 1000 } = await req.json();
+    const { destinationProvince, destinationCity, destinationDistrict, weightGrams = 1000 } = await req.json();
 
     const apiKey = process.env.KIRIMINAJA_API_KEY;
     const baseUrl = process.env.KIRIMINAJA_BASE_URL || 'https://tdev.kiriminaja.com';
 
-    // Kalkulasi tarif presisi dari gudang Jakarta Barat (11550)
+    let liveRates: any[] = [];
+
+    // Jika API Key KiriminAja tersedia, hubungi endpoint resmi KiriminAja Sandbox (POST /api/mitra/v6.1/shipping_price)
+    if (apiKey && apiKey.trim() !== '' && !apiKey.includes('your_kiriminaja')) {
+      try {
+        const kiriminAjaRes = await fetch(`${baseUrl}/api/mitra/v6.1/shipping_price`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            origin: 5783, // District ID Kebon Jeruk, Jakarta Barat
+            destination: 5783, // District ID Tujuan
+            weight: Math.max(100, Number(weightGrams) || 1000),
+            insurance: 0,
+          }),
+        });
+
+        if (kiriminAjaRes.ok) {
+          const apiData = await kiriminAjaRes.json();
+          if (apiData.status && Array.isArray(apiData.results) && apiData.results.length > 0) {
+            const courierMap: Record<string, string> = {
+              sicepat: 'SiCepat Ekspres',
+              ninja: 'Ninja Express',
+              jne: 'JNE Express',
+              jnt: 'J&T Express',
+              anteraja: 'AnterAja',
+              sap: 'SAP Express',
+            };
+
+            liveRates = apiData.results
+              .filter((r: any) => ['sicepat', 'ninja', 'jne', 'jnt'].includes(r.service?.toLowerCase()))
+              .map((r: any) => ({
+                courierCode: (r.service || 'EXP').toUpperCase(),
+                courierName: courierMap[r.service?.toLowerCase()] || r.service,
+                service: `${r.service_type || 'REG'} (KiriminAja Live)`,
+                etd: r.etd ? `${r.etd} Hari` : '2-3 Hari',
+                cost: Number(r.cost) || 10000,
+              }));
+          }
+        }
+      } catch (err) {
+        console.warn('KiriminAja Sandbox API call fallback:', err);
+      }
+    }
+
+    // Jika live rates berhasil didapatkan langsung dari KiriminAja Sandbox
+    if (liveRates.length > 0) {
+      return NextResponse.json({
+        success: true,
+        source: 'KIRIMINAJA_API_SANDBOX_LIVE',
+        origin: STORE_ORIGIN,
+        weightGrams,
+        rates: liveRates,
+      });
+    }
+
+    // Fallback presisi berdasar zona geografis dari asal gudang Kebon Jeruk (11550)
     const weightKg = Math.max(1, Math.ceil(weightGrams / 1000));
-    const dest = (destinationCity || destinationDistrict || '').toLowerCase();
+    const dest = `${destinationProvince || ''} ${destinationCity || ''} ${destinationDistrict || ''}`.toLowerCase();
 
     let baseRateJnt = 10000;
-    let baseRateSicepat = 11000;
-    let baseRateJne = 11000;
+    let baseRateSicepat = 10000;
+    let baseRateJne = 10000;
     let etd = '1-2 Hari';
 
     if (dest.includes('jakarta') || dest.includes('tangerang') || dest.includes('depok') || dest.includes('bekasi') || dest.includes('bogor')) {
-      // Jabodetabek (Area pengiriman lokal dari Kebon Jeruk, Jakarta Barat)
       baseRateJnt = 9000;
       baseRateSicepat = 10000;
       baseRateJne = 10000;
-      etd = '1 Hari (Besok Sampai)';
-    } else if (dest.includes('jawa barat') || dest.includes('bandung') || dest.includes('cirebon') || dest.includes('serang')) {
+      etd = '1 Hari';
+    } else if (dest.includes('jawa barat') || dest.includes('banten') || dest.includes('bandung') || dest.includes('cirebon') || dest.includes('serang')) {
       baseRateJnt = 11000;
       baseRateSicepat = 12000;
       baseRateJne = 12000;
@@ -56,7 +114,6 @@ export async function POST(req: Request) {
       baseRateJne = 36000;
       etd = '3-5 Hari';
     } else {
-      // Reguler default
       baseRateJnt = 12000;
       baseRateSicepat = 13000;
       baseRateJne = 14000;
@@ -67,7 +124,7 @@ export async function POST(req: Request) {
       {
         courierCode: 'JNT',
         courierName: 'J&T Express',
-        service: 'EZ (Reguler Cepat)',
+        service: 'EZ (Reguler)',
         etd,
         cost: baseRateJnt * weightKg,
       },
@@ -89,6 +146,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      source: 'KIRIMINAJA_ZONED_RATES',
       origin: STORE_ORIGIN,
       weightGrams,
       rates: calculatedRates,

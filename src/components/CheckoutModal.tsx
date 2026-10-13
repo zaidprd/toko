@@ -39,15 +39,12 @@ export default function CheckoutModal({
   const [province, setProvince] = useState('DKI Jakarta');
   const [city, setCity] = useState('Kota Jakarta Barat');
   const [subdistrict, setSubdistrict] = useState('Kebon Jeruk');
-  const [addressDetail, setAddressDetail] = useState('Jl. H. Taha No. 2K, Kelapa Dua');
-  const [isManualInput, setIsManualInput] = useState(false);
+  const [addressDetail, setAddressDetail] = useState('');
   const [courierRates, setCourierRates] = useState<CourierRate[]>(MOCK_COURIER_RATES);
   const [selectedCourier, setSelectedCourier] = useState<CourierRate>(MOCK_COURIER_RATES[0]);
 
   const currentProvObj = INDONESIA_PROVINCES.find((p) => p.name === province) || INDONESIA_PROVINCES[0];
   const availableCities = currentProvObj.cities;
-  const currentCityObj = availableCities.find((c) => c.name === city) || availableCities[0];
-  const availableDistricts = currentCityObj ? currentCityObj.districts : [];
 
   const updateRatesForDestination = async (pName: string, cName: string, dName: string) => {
     try {
@@ -55,6 +52,7 @@ export default function CheckoutModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          destinationProvince: pName,
           destinationCity: cName,
           destinationDistrict: dName,
           weightGrams: items.reduce((acc, i) => acc + (i.product.weightGrams || 400) * i.quantity, 0),
@@ -75,21 +73,14 @@ export default function CheckoutModal({
     const provObj = INDONESIA_PROVINCES.find((p) => p.name === newProv);
     if (provObj && provObj.cities.length > 0) {
       const firstCity = provObj.cities[0].name;
-      const firstDist = provObj.cities[0].districts[0] || '';
       setCity(firstCity);
-      setSubdistrict(firstDist);
-      updateRatesForDestination(newProv, firstCity, firstDist);
+      updateRatesForDestination(newProv, firstCity, subdistrict);
     }
   };
 
   const handleCityChange = (newCity: string) => {
     setCity(newCity);
-    const cityObj = currentProvObj.cities.find((c) => c.name === newCity);
-    if (cityObj && cityObj.districts.length > 0) {
-      const firstDist = cityObj.districts[0];
-      setSubdistrict(firstDist);
-      updateRatesForDestination(province, newCity, firstDist);
-    }
+    updateRatesForDestination(province, newCity, subdistrict);
   };
 
   const handleDistrictChange = (newDist: string) => {
@@ -242,7 +233,7 @@ export default function CheckoutModal({
         <div className="p-4 sm:p-5 border-b border-[#E6E1D8] bg-[#FAF7F2] flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold tracking-wider uppercase text-[#19583E] bg-[#E8F4EC] px-2.5 py-0.5 rounded-full border border-[#19583E]/20">
-              Checkout Amanah & Bebas Riba
+              Konfirmasi Pesanan
             </span>
             <h2 className="text-lg sm:text-xl font-bold text-[#222222] font-serif-title mt-1">
               {step === 'form' ? 'Informasi Pengiriman & Pembayaran' : 'Portal Pembayaran Mayar.id'}
@@ -323,109 +314,58 @@ export default function CheckoutModal({
                         <span className="text-[10px] text-[#1F6347] font-bold">JNE, J&T, SiCepat</span>
                       </div>
 
-                      {/* Toggle mode input alamat */}
-                      <div className="flex items-center justify-between text-[11px] pt-1">
-                        <span className="text-[#595959] font-medium">Pilih Wilayah Tujuan:</span>
-                        <button
-                          type="button"
-                          onClick={() => setIsManualInput(!isManualInput)}
-                          className="text-[#DE5A35] font-bold hover:underline"
-                        >
-                          {isManualInput ? '← Pakai Pilihan Dropdown' : '+ Ketik Manual (Jika Pelosok)'}
-                        </button>
-                      </div>
+                      {/* Pilihan Wilayah Pengiriman Lengkap */}
+                      <div className="space-y-2.5">
+                        <div>
+                          <label className="text-[11px] font-semibold text-[#595959] block mb-1">
+                            Pilih Provinsi
+                          </label>
+                          <select
+                            value={province}
+                            onChange={(e) => handleProvinceChange(e.target.value)}
+                            className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
+                          >
+                            {INDONESIA_PROVINCES.map((prov) => (
+                              <option key={prov.name} value={prov.name}>
+                                {prov.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                      {!isManualInput ? (
-                        /* Pilihan Dropdown Otomatis */
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
                             <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                              Pilih Provinsi
+                              Pilih Kota / Kabupaten ({availableCities.length} Wilayah)
                             </label>
                             <select
-                              value={province}
-                              onChange={(e) => handleProvinceChange(e.target.value)}
+                              value={city}
+                              onChange={(e) => handleCityChange(e.target.value)}
                               className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
                             >
-                              {INDONESIA_PROVINCES.map((prov) => (
-                                <option key={prov.name} value={prov.name}>
-                                  {prov.name}
+                              {availableCities.map((c) => (
+                                <option key={c.name} value={c.name}>
+                                  {c.name}
                                 </option>
                               ))}
                             </select>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                                Pilih Kota / Kabupaten
-                              </label>
-                              <select
-                                value={city}
-                                onChange={(e) => handleCityChange(e.target.value)}
-                                className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
-                              >
-                                {availableCities.map((c) => (
-                                  <option key={c.name} value={c.name}>
-                                    {c.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="text-[11px] font-semibold text-[#595959] block mb-1">
-                                Pilih Kecamatan (KiriminAja)
-                              </label>
-                              <select
-                                value={subdistrict}
-                                onChange={(e) => handleDistrictChange(e.target.value)}
-                                className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
-                              >
-                                {availableDistricts.map((d) => (
-                                  <option key={d} value={d}>
-                                    {d}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Input Manual jika di luar daftar */
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[11px] font-semibold text-[#595959]">Provinsi</label>
-                              <input
-                                type="text"
-                                value={province}
-                                onChange={(e) => handleProvinceChange(e.target.value)}
-                                className="w-full bg-white border border-[#E6E1D8] rounded-xl px-3 py-1.5 text-xs text-[#222222]"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[11px] font-semibold text-[#595959]">Kota/Kabupaten</label>
-                              <input
-                                type="text"
-                                value={city}
-                                onChange={(e) => handleCityChange(e.target.value)}
-                                className="w-full bg-white border border-[#E6E1D8] rounded-xl px-3 py-1.5 text-xs text-[#222222]"
-                              />
-                            </div>
-                          </div>
                           <div>
-                            <label className="text-[11px] font-semibold text-[#595959]">Kecamatan</label>
+                            <label className="text-[11px] font-semibold text-[#595959] block mb-1">
+                              Kecamatan (Ketik Nama Kecamatan)
+                            </label>
                             <input
                               type="text"
                               required
                               value={subdistrict}
                               onChange={(e) => handleDistrictChange(e.target.value)}
-                              className="w-full bg-white border border-[#E6E1D8] rounded-xl px-3 py-1.5 text-xs text-[#222222]"
+                              placeholder="Contoh: Depok, Kebon Jeruk, Sukajadi..."
+                              className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none"
                             />
                           </div>
                         </div>
-                      )}
+                      </div>
 
                       <div>
                         <label className="text-[11px] font-semibold text-[#595959] block mb-1">
@@ -496,14 +436,13 @@ export default function CheckoutModal({
                     </div>
                   )}
 
-                  {/* Pilihan Metode Pembayaran Bebas Riba via Mayar */}
+                  {/* Pilihan Metode Pembayaran via Mayar */}
                   <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#E6E1D8] space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs font-bold text-[#222222] uppercase tracking-wider flex items-center gap-1.5">
                         <Lock className="w-3.5 h-3.5 text-[#1F6347]" />
-                        <span>3. Pembayaran Bebas Riba (Mayar.id)</span>
+                        <span>3. Metode Pembayaran (Mayar.id)</span>
                       </h3>
-                      <span className="text-[10px] text-[#7A7A7A]">No PayLater</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">

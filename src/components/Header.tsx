@@ -102,10 +102,10 @@ export default function Header({
 
           <button
             onClick={onOpenAdmin}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#595959] hover:bg-[#EBE4D9] rounded-full border border-[#E6E1D8] transition-all"
-            title="Kelola Artikel Blog dengan Editor Markdown/HTML"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#19583E] bg-[#E8F4EC] hover:bg-[#D1FAE5] rounded-full border border-[#19583E]/20 transition-all shadow-2xs"
+            title="Tambah, edit, atau hapus produk toko"
           >
-            <span>✍️ CMS Editor</span>
+            <span>⚙️ Kelola Produk</span>
           </button>
 
           {/* Wishlist */}

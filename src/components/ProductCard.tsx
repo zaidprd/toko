@@ -126,27 +126,17 @@ export default function ProductCard({
             <span className="text-sm sm:text-base font-extrabold text-[#222222]">
               {formatIDR(product.price)}
             </span>
-            {product.originalPrice && (
-              <span className="text-xs text-[#8A8A8A] line-through">
-                {formatIDR(product.originalPrice)}
-              </span>
-            )}
-            {product.discountPercent && (
-              <span className="text-[11px] font-bold text-[#047857]">
-                ({product.discountPercent}% off)
-              </span>
-            )}
           </div>
 
           {/* Delivery Note */}
           <div className="mt-1.5 text-[11px] text-[#595959] flex items-center gap-1">
             {isDigital ? (
               <span className="text-[#19583E] font-medium flex items-center gap-1">
-                <Download className="w-3 h-3" /> Unduh Langsung
+                <Download className="w-3 h-3" /> Unduhan Digital (PDF)
               </span>
             ) : (
               <span className="text-[#7A7A7A] flex items-center gap-1">
-                <Truck className="w-3 h-3" /> Siap Kirim Hari Ini
+                <Truck className="w-3 h-3" /> Pengiriman Ekspedisi Fisik
               </span>
             )}
           </div>

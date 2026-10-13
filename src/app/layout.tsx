@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'toko.zaidly.com | Toko Buku, Mainan & Ebook Ramah Sunnah Anak',
-  description: 'Toko online terpercaya pilihan buku anak, mainan edukasi kayu faceless, dan printable ebook sesuai manhaj salaf dan sunnah (Rujukan Rumaysho). Belanja amanah bebas riba.',
+  description: 'Toko online terpercaya pilihan buku anak, mainan edukasi kayu faceless, dan printable ebook sesuai manhaj salaf dan sunnah (Rujukan Rumaysho). Belanja amanah & terpercaya.',
   keywords: ['buku anak sunnah', 'mainan kayu montessori islami', 'ebook anak printable', 'buku faceless', 'toko zaidly', 'rumaysho'],
 };
 

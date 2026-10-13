@@ -36,11 +36,11 @@ export default function Footer() {
           </p>
           <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6E1D8] text-[11px] text-[#4A4A4A] space-y-0.5">
             <span className="font-bold text-[#222222] block">📍 Lokasi Gudang Toko:</span>
-            <span>Jl. H. Taha No. 2K, Kelapa Dua, Kebon Jeruk, Jakarta Barat 11550</span>
+            <span>Kebon Jeruk, Jakarta Barat 11550</span>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-[#19583E] font-semibold">
             <ShieldCheck className="w-4 h-4 text-[#1F6347]" />
-            <span>Terverifikasi Bebas Riba</span>
+            <span>Transaksi Amanah &amp; Terpercaya</span>
           </div>
         </div>
 

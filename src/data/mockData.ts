@@ -8,8 +8,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'DIGITAL_EBOOK',
     category: 'Ebook Digital',
     price: 25000,
-    originalPrice: 65000,
-    discountPercent: 62,
     coverImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
@@ -55,8 +53,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'PHYSICAL_BOOK',
     category: 'Buku Fisik',
     price: 68000,
-    originalPrice: 95000,
-    discountPercent: 28,
     coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80',
@@ -96,8 +92,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'PHYSICAL_TOY',
     category: 'Mainan Edukasi',
     price: 89000,
-    originalPrice: 135000,
-    discountPercent: 34,
     coverImage: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80',
@@ -137,8 +131,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'DIGITAL_EBOOK',
     category: 'Ebook Digital',
     price: 19000,
-    originalPrice: 45000,
-    discountPercent: 57,
     coverImage: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80',
@@ -181,8 +173,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'PHYSICAL_BOOK',
     category: 'Buku Fisik',
     price: 45000,
-    originalPrice: 60000,
-    discountPercent: 25,
     coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80'
@@ -214,8 +204,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'PHYSICAL_TOY',
     category: 'Mainan Edukasi',
     price: 94000,
-    originalPrice: 140000,
-    discountPercent: 32,
     coverImage: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80'
@@ -247,8 +235,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'DIGITAL_EBOOK',
     category: 'Ebook Digital',
     price: 22000,
-    originalPrice: 50000,
-    discountPercent: 56,
     coverImage: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80'
@@ -279,8 +265,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     type: 'PHYSICAL_BOOK',
     category: 'Buku Fisik',
     price: 52000,
-    originalPrice: 70000,
-    discountPercent: 25,
     coverImage: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=800&q=80'

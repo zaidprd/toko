@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product, CartItem, CompletedOrder, BlogPost } from '@/types';
 import { INITIAL_PRODUCTS, INITIAL_BLOG_POSTS } from '@/data/mockData';
 import Header from '@/components/Header';
@@ -12,12 +12,36 @@ import CartDrawer from '@/components/CartDrawer';
 import CheckoutModal from '@/components/CheckoutModal';
 import OrderSuccessModal from '@/components/OrderSuccessModal';
 import BlogSection from '@/components/BlogSection';
-import AdminEditorModal from '@/components/AdminEditorModal';
+import AdminProductModal from '@/components/AdminProductModal';
 import Footer from '@/components/Footer';
 
 export default function Home() {
-  const [products] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>(INITIAL_BLOG_POSTS);
+
+  // Load persisted products from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('zaidly_products');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProducts(parsed);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleSaveProducts = (newProducts: Product[]) => {
+    setProducts(newProducts);
+    try {
+      localStorage.setItem('zaidly_products', JSON.stringify(newProducts));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // States
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,7 +56,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isAdminEditorOpen, setIsAdminEditorOpen] = useState(false);
+  const [isProductAdminOpen, setIsProductAdminOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<CompletedOrder | null>(null);
 
   // Filtered Products Logic
@@ -149,7 +173,7 @@ export default function Home() {
         cartCount={cartTotalCount}
         wishlistCount={wishlistIds.length}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenAdmin={() => setIsAdminEditorOpen(true)}
+        onOpenAdmin={() => setIsProductAdminOpen(true)}
         onScrollToBlog={handleScrollToBlog}
       />
 
@@ -251,11 +275,12 @@ export default function Home() {
         onClose={() => setCompletedOrder(null)}
       />
 
-      {/* Admin Markdown WYSIWYG Editor Modal */}
-      <AdminEditorModal
-        isOpen={isAdminEditorOpen}
-        onClose={() => setIsAdminEditorOpen(false)}
-        onAddPost={handleAddNewBlogPost}
+      {/* Admin Product Management Modal */}
+      <AdminProductModal
+        isOpen={isProductAdminOpen}
+        onClose={() => setIsProductAdminOpen(false)}
+        products={products}
+        onSaveProducts={handleSaveProducts}
       />
     </div>
   );

@@ -124,16 +124,6 @@ export default async function ProductDetailPage({ params }: Props) {
                   <span className="text-2xl font-black text-[#222222]">
                     {formatIDR(product.price)}
                   </span>
-                  {product.originalPrice && (
-                    <span className="text-sm text-[#8A8A8A] line-through">
-                      {formatIDR(product.originalPrice)}
-                    </span>
-                  )}
-                  {product.discountPercent && (
-                    <span className="text-xs font-bold text-[#047857] bg-[#D1FAE5] px-2 py-0.5 rounded-full">
-                      Hemat {product.discountPercent}%
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -181,7 +171,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-[#7A7A7A]">
                 <ShieldCheck className="w-4 h-4 text-[#1F6347]" />
-                <span>Transaksi Amanah, Bebas Riba & Bergaransi</span>
+                <span>Transaksi Amanah &amp; Bergaransi</span>
               </div>
             </div>
           </div>

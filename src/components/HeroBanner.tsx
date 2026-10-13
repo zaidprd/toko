@@ -72,9 +72,9 @@ export default function HeroBanner({ onSelectEbook, onSelectPhysical }: HeroBann
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-[#222222]">Bebas Riba (Mayar)</h4>
+              <h4 className="text-xs sm:text-sm font-bold text-[#222222]">Pembayaran Praktis</h4>
               <p className="text-[11px] text-[#7A7A7A] mt-0.5 leading-snug">
-                QRIS & Virtual Account BSI langsung, tanpa bunga/PayLater.
+                Mendukung QRIS instan &amp; Virtual Account Bank Syariah (Mayar).
               </p>
             </div>
           </div>
