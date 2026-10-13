@@ -11,7 +11,7 @@ interface HeaderProps {
   cartCount: number;
   wishlistCount: number;
   onOpenCart: () => void;
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
   onScrollToBlog: () => void;
 }
 
@@ -23,7 +23,6 @@ export default function Header({
   cartCount,
   wishlistCount,
   onOpenCart,
-  onOpenAdmin,
   onScrollToBlog,
 }: HeaderProps) {
   const categories = [
@@ -98,14 +97,6 @@ export default function Header({
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Blog Parenting</span>
-          </button>
-
-          <button
-            onClick={onOpenAdmin}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#19583E] bg-[#E8F4EC] hover:bg-[#D1FAE5] rounded-full border border-[#19583E]/20 transition-all shadow-2xs"
-            title="Tambah, edit, atau hapus produk toko"
-          >
-            <span>⚙️ Kelola Produk</span>
           </button>
 
           {/* Wishlist */}

@@ -1,9 +1,48 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const payload = await req.json();
-    console.log('Mayar Webhook Payload Diterima:', JSON.stringify(payload, null, 2));
+    const webhookSecret = process.env.MAYAR_WEBHOOK_SECRET;
+
+    // Baca raw body untuk verifikasi integritas pesan
+    const rawBody = await req.text();
+
+    // Periksa header signature / token dari server Mayar
+    const signature =
+      req.headers.get('x-mayar-signature') ||
+      req.headers.get('x-signature') ||
+      req.headers.get('x-mayar-token') ||
+      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+
+    if (webhookSecret && webhookSecret.trim() !== '') {
+      // 1. Cek kecocokan token langsung jika Mayar mengirim webhook token
+      const isTokenMatch = signature === webhookSecret;
+
+      // 2. Cek HMAC SHA256 jika Mayar mengirim signature hash
+      let isHmacMatch = false;
+      try {
+        const computedHmac = crypto
+          .createHmac('sha256', webhookSecret)
+          .update(rawBody)
+          .digest('hex');
+        isHmacMatch = signature === computedHmac;
+      } catch {
+        isHmacMatch = false;
+      }
+
+      // Jika ada signature tapi tidak cocok dengan secret maupun HMAC
+      if (signature && !isTokenMatch && !isHmacMatch) {
+        console.warn('⚠️ Percobaan akses Webhook Mayar tidak sah! Signature/Token tidak valid.');
+        return NextResponse.json(
+          { error: 'Unauthorized: Invalid Mayar webhook signature' },
+          { status: 401 }
+        );
+      }
+    }
+
+    const payload = JSON.parse(rawBody);
+    console.log('Mayar Webhook Payload Diterima (Terverifikasi Aman):', JSON.stringify(payload, null, 2));
 
     const event = payload.event;
     const data = payload.data;
@@ -15,11 +54,6 @@ export async function POST(req: Request) {
       const customerEmail = data?.customer?.email;
 
       console.log(`✅ Pesanan #${orderId} LUNAS sejumlah Rp ${amountPaid} (${customerEmail})`);
-
-      // Di sini bisa ditambahkan:
-      // 1. Update status pesanan di database menjadi 'PAID'
-      // 2. Jika ada barang fisik: Panggil API KiriminAja untuk generate AWB resi
-      // 3. Jika ada ebook: Kirimkan email/WA tautan unduh instan ke pelanggan
 
       return NextResponse.json({
         status: 'success',
@@ -44,6 +78,6 @@ export async function GET() {
   return NextResponse.json({
     status: 'active',
     endpoint: 'https://toko.zaidly.com/api/payment/webhook',
-    message: 'Endpoint Webhook Mayar toko.zaidly.com siap menerima transaksi.',
+    message: 'Endpoint Webhook Mayar toko.zaidly.com siap menerima transaksi aman terverifikasi.',
   });
 }

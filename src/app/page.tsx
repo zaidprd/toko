@@ -12,7 +12,6 @@ import CartDrawer from '@/components/CartDrawer';
 import CheckoutModal from '@/components/CheckoutModal';
 import OrderSuccessModal from '@/components/OrderSuccessModal';
 import BlogSection from '@/components/BlogSection';
-import AdminProductModal from '@/components/AdminProductModal';
 import Footer from '@/components/Footer';
 
 export default function Home() {
@@ -56,7 +55,6 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isProductAdminOpen, setIsProductAdminOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<CompletedOrder | null>(null);
 
   // Filtered Products Logic
@@ -173,7 +171,6 @@ export default function Home() {
         cartCount={cartTotalCount}
         wishlistCount={wishlistIds.length}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenAdmin={() => setIsProductAdminOpen(true)}
         onScrollToBlog={handleScrollToBlog}
       />
 
@@ -273,14 +270,6 @@ export default function Home() {
       <OrderSuccessModal
         order={completedOrder}
         onClose={() => setCompletedOrder(null)}
-      />
-
-      {/* Admin Product Management Modal */}
-      <AdminProductModal
-        isOpen={isProductAdminOpen}
-        onClose={() => setIsProductAdminOpen(false)}
-        products={products}
-        onSaveProducts={handleSaveProducts}
       />
     </div>
   );
