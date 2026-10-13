@@ -70,14 +70,14 @@ export default function OrderSuccessModal({ order, onClose }: OrderSuccessModalP
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto p-5 sm:p-6 space-y-6">
-          {/* DIGITAL DOWNLOAD ACCESS (Cloudflare R2 Simulation) */}
+          {/* DIGITAL DOWNLOAD ACCESS */ }
           {order.digitalDownloads.length > 0 && (
             <div className="bg-[#FAF7F2] p-4 sm:p-5 rounded-2xl border-2 border-[#19583E]/30 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Download className="w-4 h-4 text-[#19583E]" />
                   <h3 className="text-xs font-bold text-[#222222] uppercase tracking-wider">
-                    Pusat Unduhan Ebook Instan (Cloudflare R2)
+                    Pusat Unduhan Ebook Instan
                   </h3>
                 </div>
                 <span className="text-[10px] font-bold text-[#19583E] bg-[#E8F4EC] px-2 py-0.5 rounded">

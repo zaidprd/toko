@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
       if (!r2Res.ok) {
         console.error('R2 upload failed:', r2Res.status, await r2Res.text().catch(() => ''));
-        return NextResponse.json({ error: 'Gagal mengunggah file ke Cloudflare R2.' }, { status: 502 });
+        return NextResponse.json({ error: 'Gagal mengunggah berkas ebook.' }, { status: 502 });
       }
 
       // Simpan metadata ke tabel Supabase `ebook_files`

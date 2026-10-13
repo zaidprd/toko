@@ -17,7 +17,14 @@ export async function POST(req: Request) {
     const productIds = (order.items as any[]).map((item) => item.id).filter(Boolean);
     if (productIds.length) {
       const files = await db.list<any>('ebook_files', `select=product_id,object_key,file_name&product_id=in.(${productIds.map((id) => `"${encodeURIComponent(id)}"`).join(',')})`);
-      for (const file of files) downloads.push({ productId: file.product_id, fileName: file.file_name, url: signedR2Url('GET', file.object_key, 600), expiresInMinutes: 10 });
+      for (const file of files) {
+        downloads.push({
+          productId: file.product_id,
+          fileName: file.file_name,
+          url: `/api/orders/download?orderId=${encodeURIComponent(order.id)}&email=${encodeURIComponent(email)}&productId=${encodeURIComponent(file.product_id)}`,
+          expiresInMinutes: 10,
+        });
+      }
     }
   }
   return NextResponse.json({ order: { id: order.id, status: order.status, total: order.total, paidAt: order.paid_at, createdAt: order.created_at, shipment: order.shipment, downloads } });

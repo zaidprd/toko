@@ -78,7 +78,7 @@ export default function Footer() {
             <strong>Pembayaran:</strong> QRIS Instan &amp; Virtual Account BSI.
           </p>
           <p className="text-[11px] text-[#595959] leading-relaxed">
-            <strong>Penyimpanan:</strong> Cloudflare R2 (Akses Cepat &amp; Bebas Biaya Egress).
+            <strong>Unduhan Digital:</strong> Akses Berkas Ebook Resmi &amp; Instan.
           </p>
         </div>
       </div>

@@ -464,7 +464,7 @@ export default function AdminPage() {
       await saveProductToServer(newProd);
       if (newProd.type === 'DIGITAL_EBOOK' && ebookFile) {
         const sizeMb = (ebookFile.size / (1024 * 1024)).toFixed(1);
-        setUploadStatusText(`Mengunggah berkas PDF ke Cloudflare R2 (${sizeMb} MB)...`);
+        setUploadStatusText(`Mengunggah berkas PDF (${sizeMb} MB)...`);
 
         const formData = new FormData();
         formData.append('file', ebookFile);
@@ -480,7 +480,7 @@ export default function AdminPage() {
 
         const uploadData = await uploadRes.json().catch(() => ({}));
         if (!uploadRes.ok) {
-          throw new Error(uploadData.error || 'Upload PDF ke Cloudflare R2 gagal.');
+          throw new Error(uploadData.error || 'Upload berkas PDF gagal.');
         }
       }
 
@@ -1438,14 +1438,14 @@ export default function AdminPage() {
                         <div className="sm:col-span-2 space-y-3 p-4 bg-[#E8F4EC] rounded-2xl border-2 border-[#19583E]/20 text-xs">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-[#19583E] flex items-center gap-1.5">
-                              <span>⚡ Unggah Berkas PDF Ebook (Cloudflare R2)</span>
+                              <span>⚡ Unggah Berkas PDF Ebook Digital</span>
                             </span>
                             <span className="text-[10px] font-bold text-[#19583E] bg-white px-2 py-0.5 rounded-full border border-[#19583E]/20">
-                              Penyimpanan Privat R2
+                              Penyimpanan Privat Aman
                             </span>
                           </div>
                           <p className="text-[11px] text-[#19583E]/90 leading-relaxed">
-                            Berkas PDF akan diunggah langsung ke penyimpanan Cloudflare R2 privat toko Anda. Tautan unduh hanya dibuatkan secara otomatis untuk pembeli yang statusnya <strong>LUNAS (PAID)</strong> dengan masa aktif 10 menit agar aman dari penyebaran liar.
+                            Berkas PDF akan disimpan secara privat dan terenkripsi. Tautan unduh hanya dibuatkan secara otomatis untuk pembeli yang statusnya <strong>LUNAS (PAID)</strong> dengan masa aktif aman agar terlindungi dari penyebaran liar.
                           </p>
 
                           <div className="bg-white p-3.5 rounded-xl border border-[#19583E]/30 space-y-2.5">
@@ -1464,7 +1464,7 @@ export default function AdminPage() {
                                       {ebookFile.name}
                                     </div>
                                     <div className="text-[10px] text-[#7A7A7A]">
-                                      {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB • Siap diunggah ke Cloudflare R2
+                                      {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB • Siap disimpan ke server
                                     </div>
                                   </div>
                                 </div>

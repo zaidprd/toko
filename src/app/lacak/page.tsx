@@ -188,7 +188,7 @@ export default function TrackingPage() {
               {result.status === 'PAID' && (
                 <div className="space-y-2.5 pt-1">
                   <h3 className="text-xs font-bold text-[#222222] uppercase tracking-wider flex items-center gap-1.5">
-                    <span>📥 Berkas Ebook Unduhan Anda (Cloudflare R2):</span>
+                    <span>📥 Berkas Ebook Unduhan Anda:</span>
                   </h3>
 
                   {result.downloads && result.downloads.length > 0 ? (
