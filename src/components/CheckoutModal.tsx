@@ -65,9 +65,50 @@ export default function CheckoutModal({
   const shippingCost = hasPhysical ? (isFreeShipping ? 0 : selectedCourier.cost) : 0;
   const grandTotal = subtotal + shippingCost;
 
-  const handleStartMayarPayment = (e: React.FormEvent) => {
+  const handleStartMayarPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('mayar_gateway');
+    setIsProcessing(true);
+
+    try {
+      const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+      const res = await fetch('/api/payment/create-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          customer: {
+            fullName,
+            whatsapp,
+            email,
+            province,
+            city,
+            subdistrict,
+            addressDetail,
+            courier: hasPhysical ? selectedCourier : undefined,
+            paymentMethod,
+          },
+          items,
+          shippingCost,
+          grandTotal,
+        }),
+      });
+
+      const data = await res.json();
+
+      // Jika ada link invoice resmi dari Mayar.id, arahkan pelanggan langsung ke Mayar!
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+
+      // Jika masih mode simulator lokal
+      setStep('mayar_gateway');
+    } catch (err) {
+      console.error('Error create invoice:', err);
+      setStep('mayar_gateway');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleConfirmMayarPaid = () => {
