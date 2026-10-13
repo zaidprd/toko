@@ -463,42 +463,25 @@ export default function AdminPage() {
     try {
       await saveProductToServer(newProd);
       if (newProd.type === 'DIGITAL_EBOOK' && ebookFile) {
-        setUploadStatusText('Menyiapkan koneksi ke Cloudflare R2...');
-        const signRes = await fetch('/api/admin/ebooks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            productId: newProd.id,
-            fileName: ebookFile.name,
-            size: ebookFile.size,
-            type: ebookFile.type,
-          }),
-        });
-        const signed = await signRes.json();
-        if (!signRes.ok) throw new Error(signed.error || 'Upload PDF gagal disiapkan.');
-
         const sizeMb = (ebookFile.size / (1024 * 1024)).toFixed(1);
         setUploadStatusText(`Mengunggah berkas PDF ke Cloudflare R2 (${sizeMb} MB)...`);
-        const uploadRes = await fetch(signed.uploadUrl, {
-          method: 'PUT',
-          body: ebookFile,
-          headers: { 'Content-Type': 'application/pdf' },
-        });
-        if (!uploadRes.ok) throw new Error('Upload PDF ke Cloudflare R2 gagal.');
 
-        setUploadStatusText('Menyimpan metadata ke database Supabase...');
-        const confirmRes = await fetch('/api/admin/ebooks', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            productId: newProd.id,
-            objectKey: signed.objectKey,
-            fileName: ebookFile.name,
-            size: ebookFile.size,
-            mayarDeliveryUrl: mayarDeliveryUrl.trim() || null,
-          }),
+        const formData = new FormData();
+        formData.append('file', ebookFile);
+        formData.append('productId', newProd.id);
+        if (mayarDeliveryUrl.trim()) {
+          formData.append('mayarDeliveryUrl', mayarDeliveryUrl.trim());
+        }
+
+        const uploadRes = await fetch('/api/admin/ebooks', {
+          method: 'POST',
+          body: formData,
         });
-        if (!confirmRes.ok) throw new Error('Metadata PDF gagal disimpan.');
+
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error || 'Upload PDF ke Cloudflare R2 gagal.');
+        }
       }
 
       if (editingId) {
