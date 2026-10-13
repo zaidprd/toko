@@ -578,11 +578,15 @@ export default function CheckoutModal({
                               {item.product.title}
                             </div>
                             <div className="text-[10px] text-[#7A7A7A]">
-                              {item.quantity} x {formatIDR(item.product.price)}
+                              {item.quantity} x {item.product.price === 0 ? 'GRATIS' : formatIDR(item.product.price)}
                             </div>
                           </div>
                           <div className="font-bold text-[#222222]">
-                            {formatIDR(item.product.price * item.quantity)}
+                            {item.product.price === 0 ? (
+                              <span className="text-[#1F6347]">GRATIS</span>
+                            ) : (
+                              formatIDR(item.product.price * item.quantity)
+                            )}
                           </div>
                         </div>
                       ))}
@@ -591,7 +595,9 @@ export default function CheckoutModal({
                     <div className="space-y-1.5 text-xs pt-1">
                       <div className="flex justify-between text-[#595959]">
                         <span>Subtotal Produk:</span>
-                        <span className="font-bold text-[#222222]">{formatIDR(subtotal)}</span>
+                        <span className="font-bold text-[#222222]">
+                          {subtotal === 0 ? <span className="text-[#1F6347]">GRATIS (Rp 0)</span> : formatIDR(subtotal)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-[#595959]">
                         <span>Ongkos Kirim:</span>
@@ -601,7 +607,9 @@ export default function CheckoutModal({
                       </div>
                       <div className="border-t border-[#E6E1D8] pt-2 flex justify-between text-sm font-black text-[#222222]">
                         <span>Total Pembayaran:</span>
-                        <span className="text-base text-[#DE5A35]">{formatIDR(grandTotal)}</span>
+                        <span className="text-base text-[#DE5A35]">
+                          {grandTotal === 0 ? <span className="text-[#1F6347] font-black">GRATIS (Rp 0)</span> : formatIDR(grandTotal)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -624,7 +632,12 @@ export default function CheckoutModal({
                     {isProcessing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Membuat tagihan...</span>
+                        <span>{grandTotal === 0 ? 'Memproses klaim gratis...' : 'Membuat tagihan...'}</span>
+                      </>
+                    ) : grandTotal === 0 ? (
+                      <>
+                        <Download className="w-4 h-4" />
+                        <span>Klaim &amp; Unduh Gratis Sekarang</span>
                       </>
                     ) : (
                       <>

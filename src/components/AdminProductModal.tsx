@@ -188,7 +188,7 @@ export default function AdminProductModal({
       title: title.trim(),
       category,
       type,
-      price: Number(price) || 10000,
+      price: Math.max(0, Math.floor(Number(price) || 0)),
       coverImage: defaultImg,
       galleryImages: [defaultImg],
       rating: 5.0,
@@ -644,14 +644,14 @@ export default function AdminProductModal({
                         <input
                           type="number"
                           required
-                          min={1000}
+                          min={0}
                           value={price}
                           onChange={(e) => setPrice(Number(e.target.value))}
-                          placeholder="68000"
+                          placeholder="0 (Gratis) atau 68000"
                           className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none font-bold"
                         />
                         <span className="text-[10px] text-[#7A7A7A] mt-0.5 block">
-                          Harga jujur tunggal (tanpa rekayasa harga coret).
+                          Harga riil (Isi 0 jika produk gratis / free download).
                         </span>
                       </div>
 

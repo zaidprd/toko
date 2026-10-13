@@ -105,15 +105,53 @@ export async function POST(req: Request) {
   const grandTotal = subtotal + shippingCost;
   const orderId = `ORD-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://toko.zaidly.com';
+
+  if (!isDatabaseConfigured())
+    return NextResponse.json({ error: 'Penyimpanan pesanan belum dikonfigurasi.' }, { status: 503 });
+
+  // Khusus produk gratis (total Rp 0) seperti ebook digital / printable freebie:
+  // Tidak perlu tagihan payment gateway Mayar. Langsung set status PAID dan siap diunduh!
+  if (grandTotal === 0) {
+    try {
+      await db.insert('orders', {
+        id: orderId,
+        email: email.toLowerCase(),
+        whatsapp,
+        customer: { ...customer, fullName, email, whatsapp },
+        items: lines,
+        subtotal: 0,
+        shipping_cost: 0,
+        total: 0,
+        status: 'PAID',
+        paid_at: new Date().toISOString(),
+      });
+    } catch (insertErr) {
+      console.error('Failed to insert free order:', insertErr);
+      return NextResponse.json(
+        { error: 'Gagal memproses pesanan gratis di database. Pastikan migrasi batas constraint (total >= 0) sudah dijalankan di Supabase SQL Editor.' },
+        { status: 500 }
+      );
+    }
+
+    const redirectUrl = `${appUrl}/lacak?order=${orderId}&email=${encodeURIComponent(email)}`;
+    return NextResponse.json({
+      orderId,
+      invoiceId: `FREE-${orderId}`,
+      paymentUrl: redirectUrl,
+      isFree: true,
+      subtotal: 0,
+      shippingCost: 0,
+      grandTotal: 0,
+    });
+  }
+
   // ---- 4. Fail closed: produksi maupun development tidak pernah membuat status lunas palsu ----
   const apiKey = process.env.MAYAR_API_KEY;
   const apiUrl = process.env.MAYAR_API_URL || 'https://api.mayar.id/hl/v1';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://toko.zaidly.com';
 
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('your_mayar'))
     return NextResponse.json({ error: 'Pembayaran belum dikonfigurasi.' }, { status: 503 });
-  if (!isDatabaseConfigured())
-    return NextResponse.json({ error: 'Penyimpanan pesanan belum dikonfigurasi.' }, { status: 503 });
 
   await db.insert('orders', {
     id: orderId, email: email.toLowerCase(), whatsapp, customer: { ...customer, fullName, email, whatsapp },

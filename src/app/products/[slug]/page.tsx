@@ -134,9 +134,15 @@ export default async function ProductDetailPage({ params }: Props) {
 
               <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#E6E1D8]">
                 <div className="flex items-baseline gap-2.5">
-                  <span className="text-2xl font-black text-[#222222]">
-                    {formatIDR(product.price)}
-                  </span>
+                  {product.price === 0 ? (
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-lg sm:text-xl font-black bg-[#EBF7EE] text-[#1F6347] border border-[#1F6347]/30">
+                      🎉 GRATIS (Rp 0)
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-black text-[#222222]">
+                      {formatIDR(product.price)}
+                    </span>
+                  )}
                 </div>
               </div>
 

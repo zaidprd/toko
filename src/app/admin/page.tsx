@@ -433,7 +433,7 @@ export default function AdminPage() {
       title: title.trim(),
       category,
       type,
-      price: Number(price) || 10000,
+      price: Math.max(0, Math.floor(Number(price) || 0)),
       coverImage: finalCover,
       galleryImages: finalGallery,
       videoUrl: videoUrl.trim() || undefined,
@@ -933,8 +933,16 @@ export default function AdminPage() {
                             <h3 className="text-xs sm:text-sm font-bold text-[#222222] truncate max-w-lg">
                               {prod.title}
                             </h3>
-                            <div className="text-xs font-bold text-[#DE5A35] mt-0.5">
-                              Rp {prod.price.toLocaleString('id-ID')}
+                            <div className="text-xs font-bold mt-0.5">
+                              {prod.price === 0 ? (
+                                <span className="inline-block text-[#1F6347] bg-[#EBF7EE] px-2 py-0.5 rounded-md text-[11px] font-black border border-[#1F6347]/20">
+                                  GRATIS (Rp 0)
+                                </span>
+                              ) : (
+                                <span className="text-[#DE5A35]">
+                                  Rp {prod.price.toLocaleString('id-ID')}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1380,14 +1388,14 @@ export default function AdminPage() {
                         <input
                           type="number"
                           required
-                          min={1000}
+                          min={0}
                           value={price}
                           onChange={(e) => setPrice(Number(e.target.value))}
-                          placeholder="68000"
+                          placeholder="0 (Gratis) atau 68000"
                           className="w-full bg-white border border-[#E6E1D8] focus:border-[#DE5A35] rounded-xl px-3 py-2 text-xs text-[#222222] outline-none font-bold"
                         />
                         <span className="text-[10px] text-[#7A7A7A] mt-0.5 block">
-                          Harga jujur tunggal (tanpa manipulasi harga coret).
+                          Harga riil (Isi 0 jika produk gratis / free download).
                         </span>
                       </div>
 

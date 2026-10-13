@@ -20,7 +20,7 @@ create table if not exists public.orders (
   items jsonb not null,
   subtotal integer not null check (subtotal >= 0),
   shipping_cost integer not null check (shipping_cost >= 0),
-  total integer not null check (total > 0),
+  total integer not null check (total >= 0),
   status text not null default 'PENDING' check (status in ('PENDING','PAID','EXPIRED','FAILED','REFUNDED')),
   mayar_invoice_id text unique,
   mayar_transaction_id text unique,
@@ -50,3 +50,8 @@ alter table public.blog_posts enable row level security;
 alter table public.orders enable row level security;
 alter table public.ebook_files enable row level security;
 alter table public.webhook_events enable row level security;
+
+-- Migrasi untuk mendukung produk gratis / total pesanan Rp 0:
+-- Jalankan perintah ini di Supabase SQL Editor jika tabel orders sudah ada sebelumnya:
+-- alter table public.orders drop constraint if exists orders_total_check;
+-- alter table public.orders add constraint orders_total_check check (total >= 0);

@@ -147,9 +147,15 @@ export default function ProductDetailModal({
               {/* Price */}
               <div className="bg-[#FAF7F2] p-3.5 rounded-2xl border border-[#E6E1D8]">
                 <div className="flex items-baseline gap-2.5">
-                  <span className="text-2xl font-black text-[#222222]">
-                    {formatIDR(product.price)}
-                  </span>
+                  {product.price === 0 ? (
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-lg sm:text-xl font-black bg-[#EBF7EE] text-[#1F6347] border border-[#1F6347]/30">
+                      🎉 GRATIS (Rp 0)
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-black text-[#222222]">
+                      {formatIDR(product.price)}
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-[#7A7A7A] mt-1">
                   {isDigital
@@ -287,8 +293,17 @@ export default function ProductDetailModal({
                     }}
                     className="w-full py-3 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   >
-                    <Zap className="w-4 h-4 fill-white" />
-                    <span>Beli Sekarang (Instan)</span>
+                    {product.price === 0 ? (
+                      <>
+                        <Download className="w-4 h-4" />
+                        <span>Klaim Gratis Sekarang</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 fill-white" />
+                        <span>Beli Sekarang (Instan)</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

@@ -123,9 +123,15 @@ export default function ProductCard({
         {/* Pricing Row */}
         <div className="pt-2 border-t border-[#F3EEE7]">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-sm sm:text-base font-extrabold text-[#222222]">
-              {formatIDR(product.price)}
-            </span>
+            {product.price === 0 ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EBF7EE] text-[#1F6347] border border-[#1F6347]/20">
+                🎉 GRATIS (Rp 0)
+              </span>
+            ) : (
+              <span className="text-sm sm:text-base font-extrabold text-[#222222]">
+                {formatIDR(product.price)}
+              </span>
+            )}
           </div>
 
           {/* Delivery Note */}

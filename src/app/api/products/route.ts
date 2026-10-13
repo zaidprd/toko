@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!isDatabaseConfigured()) return NextResponse.json({ error: 'Database belum dikonfigurasi.' }, { status: 503 });
   const product = (await req.json()) as Product;
-  if (!product?.id || !product?.slug || !product?.title || !Number.isInteger(product.price) || product.price < 1000)
+  if (!product?.id || !product?.slug || !product?.title || !Number.isInteger(product.price) || product.price < 0)
     return NextResponse.json({ error: 'Data produk tidak valid.' }, { status: 400 });
   await saveProduct(product);
   return NextResponse.json({ product });

@@ -128,7 +128,11 @@ export default function CartDrawer({
 
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs font-extrabold text-[#222222]">
-                        {formatIDR(item.product.price * item.quantity)}
+                        {item.product.price === 0 ? (
+                          <span className="text-[#1F6347] font-black">GRATIS (Rp 0)</span>
+                        ) : (
+                          formatIDR(item.product.price * item.quantity)
+                        )}
                       </span>
 
                       {/* Quantity Controller */}
@@ -161,7 +165,9 @@ export default function CartDrawer({
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-[#595959]">
                 <span>Subtotal Barang:</span>
-                <span className="font-bold text-[#222222]">{formatIDR(subtotal)}</span>
+                <span className="font-bold text-[#222222]">
+                  {subtotal === 0 ? <span className="text-[#1F6347]">GRATIS (Rp 0)</span> : formatIDR(subtotal)}
+                </span>
               </div>
               <div className="flex justify-between text-[#595959]">
                 <span>Biaya Pengiriman:</span>
@@ -171,7 +177,9 @@ export default function CartDrawer({
               </div>
               <div className="border-t border-[#E6E1D8] pt-2 flex justify-between text-sm font-black text-[#222222]">
                 <span>Total Estimasi:</span>
-                <span className="text-base text-[#DE5A35]">{formatIDR(subtotal)}</span>
+                <span className="text-base text-[#DE5A35]">
+                  {subtotal === 0 ? <span className="text-[#1F6347] font-black">GRATIS (Rp 0)</span> : formatIDR(subtotal)}
+                </span>
               </div>
             </div>
 
@@ -182,7 +190,7 @@ export default function CartDrawer({
               }}
               className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
-              <span>Lanjut ke Pembayaran</span>
+              <span>{subtotal === 0 ? 'Lanjut Klaim Gratis' : 'Lanjut ke Pembayaran'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

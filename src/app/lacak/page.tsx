@@ -22,14 +22,31 @@ export default function TrackingPage() {
   const [loading, setLoading] = useState(false);
   const [fromPayment, setFromPayment] = useState(false);
 
-  // Pembeli yang kembali dari halaman pembayaran membawa ?order=ORD-xxx
+  // Pembeli yang kembali dari pembayaran atau klaim gratis membawa ?order=ORD-xxx&email=xxx
   useEffect(() => {
-    const order = new URLSearchParams(window.location.search).get('order');
+    const params = new URLSearchParams(window.location.search);
+    const order = params.get('order');
+    const emailParam = params.get('email');
     if (order) {
       const clean = order.replace(/[^A-Za-z0-9-]/g, '').slice(0, 40);
       setQuery(clean);
       setSubmittedQuery(clean);
       setFromPayment(true);
+      if (emailParam) {
+        setEmail(emailParam);
+        setLoading(true);
+        fetch('/api/orders/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: clean, email: emailParam }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.order) setResult(data.order);
+          })
+          .catch(() => {})
+          .finally(() => setLoading(false));
+      }
     }
   }, []);
 
@@ -76,10 +93,15 @@ export default function TrackingPage() {
 
           {fromPayment && (
             <div className="p-4 bg-[#E8F4EC] rounded-2xl border border-[#19583E]/20 text-xs text-[#19583E] space-y-1">
-              <p className="font-bold">Terima kasih, pesanan #{submittedQuery} sudah kami terima.</p>
+              <p className="font-bold">
+                {result?.total === 0
+                  ? `Alhamdulillah! Pesanan gratis #${submittedQuery} berhasil diproses.`
+                  : `Terima kasih, pesanan #${submittedQuery} sudah kami terima.`}
+              </p>
               <p>
-                Bukti pembayaran resmi dikirim ke email Anda. Jika pembayaran berhasil, pesanan akan kami proses
-                dan informasi pengiriman / tautan ebook dikirim ke email &amp; WhatsApp Anda.
+                {result?.total === 0
+                  ? 'File PDF digital Anda siap diunduh langsung pada tombol di bawah ini.'
+                  : 'Bukti pembayaran resmi dikirim ke email Anda. Jika pembayaran berhasil, pesanan akan kami proses dan informasi pengiriman / tautan ebook dikirim ke email & WhatsApp Anda.'}
               </p>
             </div>
           )}
@@ -115,7 +137,7 @@ export default function TrackingPage() {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs text-[#19583E] flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-[#19583E] animate-pulse" />
-                      Status: Pembayaran Lunas Terverifikasi
+                      Status: {Number(result.total) === 0 ? 'Akses Unduh Gratis Terkonfirmasi' : 'Pembayaran Lunas Terverifikasi'}
                     </span>
                     <span className="text-[10px] font-bold text-[#19583E] bg-white px-2 py-0.5 rounded-full border border-[#19583E]/20">
                       PAID
@@ -123,8 +145,15 @@ export default function TrackingPage() {
                   </div>
                   <div className="text-xs text-[#19583E]/90 flex flex-wrap gap-x-4 gap-y-1">
                     <span>Pesanan: <strong>#{submittedQuery}</strong></span>
-                    {result.total && (
-                      <span>Total: <strong>Rp {Number(result.total).toLocaleString('id-ID')}</strong></span>
+                    {result.total !== undefined && (
+                      <span>
+                        Total:{' '}
+                        <strong>
+                          {Number(result.total) === 0
+                            ? 'GRATIS (Rp 0)'
+                            : `Rp ${Number(result.total).toLocaleString('id-ID')}`}
+                        </strong>
+                      </span>
                     )}
                     {result.paidAt && (
                       <span>Waktu Lunas: <strong>{new Date(result.paidAt).toLocaleString('id-ID')}</strong></span>
