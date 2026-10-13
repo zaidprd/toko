@@ -288,7 +288,7 @@ export default function ProductDetailModal({
                     className="w-full py-3 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   >
                     <Zap className="w-4 h-4 fill-white" />
-                    <span>Beli Sekarang via Mayar</span>
+                    <span>Beli Sekarang (Instan)</span>
                   </button>
                 </div>
               </div>

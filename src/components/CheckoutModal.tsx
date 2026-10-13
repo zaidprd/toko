@@ -313,7 +313,7 @@ export default function CheckoutModal({
               Konfirmasi Pesanan
             </span>
             <h2 className="text-lg sm:text-xl font-bold text-[#222222] font-serif-title mt-1">
-              {step === 'form' ? 'Informasi Pengiriman & Pembayaran' : 'Portal Pembayaran Mayar.id'}
+              {step === 'form' ? 'Informasi Pengiriman & Pembayaran' : 'Portal Pembayaran Online'}
             </h2>
           </div>
           <button

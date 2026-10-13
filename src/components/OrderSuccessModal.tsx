@@ -58,7 +58,7 @@ export default function OrderSuccessModal({ order, onClose }: OrderSuccessModalP
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <span className="text-[11px] font-bold text-[#19583E] tracking-wider uppercase bg-white px-3 py-1 rounded-full border border-[#19583E]/20">
-            Pembayaran Lunas via Mayar.id
+            Pembayaran Lunas Terverifikasi
           </span>
           <h2 className="text-xl sm:text-2xl font-bold text-[#222222] font-serif-title mt-2">
             Jazaakumullahu Khayran, {order.customer.fullName}!

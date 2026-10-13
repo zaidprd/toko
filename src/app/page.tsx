@@ -28,6 +28,13 @@ export default function Home() {
           setProducts(parsed);
         }
       }
+      const savedBlogs = localStorage.getItem('zaidly_blog_posts');
+      if (savedBlogs) {
+        const parsedBlogs = JSON.parse(savedBlogs);
+        if (Array.isArray(parsedBlogs) && parsedBlogs.length > 0) {
+          setBlogPosts(parsedBlogs);
+        }
+      }
     } catch (e) {
       console.error(e);
     }

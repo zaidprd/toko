@@ -62,7 +62,7 @@ export default function TrackingPage() {
               <div className="flex items-center justify-between pb-3 border-b border-[#E6E1D8]">
                 <div>
                   <div className="text-xs font-bold text-[#222222]">Pesanan #ORD-882190</div>
-                  <div className="text-[10px] text-[#7A7A7A]">Status: Lunas via Mayar.id QRIS</div>
+                  <div className="text-[10px] text-[#7A7A7A]">Status: Lunas via QRIS</div>
                 </div>
                 <span className="text-[10px] font-bold text-[#19583E] bg-[#E8F4EC] px-2.5 py-1 rounded-full">
                   ✓ Terverifikasi

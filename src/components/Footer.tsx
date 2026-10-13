@@ -64,7 +64,7 @@ export default function Footer() {
             <li><a href="#" className="hover:text-[#DE5A35]">Kaidah Faceless Illustration</a></li>
             <li><a href="#" className="hover:text-[#DE5A35]">Ketentuan Hak Khiyar &amp; Retur Cacat</a></li>
             <li><a href="#" className="hover:text-[#DE5A35]">Akad Jual Beli Jelas &amp; Transparan</a></li>
-            <li><a href="#" className="hover:text-[#DE5A35]">Pembayaran QRIS &amp; BSI via Mayar.id</a></li>
+            <li><a href="#" className="hover:text-[#DE5A35]">Pembayaran QRIS &amp; Virtual Account BSI</a></li>
           </ul>
         </div>
 
@@ -72,10 +72,10 @@ export default function Footer() {
         <div className="space-y-2.5">
           <h4 className="font-bold text-xs uppercase tracking-wider text-[#222222]">Integrasi Resmi</h4>
           <p className="text-[11px] text-[#595959] leading-relaxed">
-            <strong>Logistik:</strong> KiriminAja Open API (J&amp;T Express, SiCepat, JNE).
+            <strong>Logistik:</strong> Ekspedisi KiriminAja (J&amp;T Express, SiCepat, JNE).
           </p>
           <p className="text-[11px] text-[#595959] leading-relaxed">
-            <strong>Gateway:</strong> Mayar.id (QRIS &amp; VA Bank Syariah Indonesia).
+            <strong>Pembayaran:</strong> QRIS Instan &amp; Virtual Account BSI.
           </p>
           <p className="text-[11px] text-[#595959] leading-relaxed">
             <strong>Penyimpanan:</strong> Cloudflare R2 (Akses Cepat &amp; Bebas Biaya Egress).

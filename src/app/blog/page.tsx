@@ -3,7 +3,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { INITIAL_BLOG_POSTS } from '@/data/mockData';
 import Footer from '@/components/Footer';
-import { BookOpen, Calendar, Clock, ChevronRight, Sparkles, ArrowLeft } from 'lucide-react';
+import BlogIndexList from '@/components/BlogIndexList';
+import { BookOpen, Sparkles, ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Blog Parenting Sunnah & Fikih Edukasi Anak | Toko Zaidly',
@@ -76,62 +77,8 @@ export default function BlogIndexPage() {
           </p>
         </div>
 
-        {/* Articles List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {INITIAL_BLOG_POSTS.map((post) => (
-            <article
-              key={post.id}
-              className="bg-white rounded-3xl border border-[#E6E1D8] overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
-            >
-              <Link href={`/blog/${post.slug}`} className="block overflow-hidden aspect-16/9 bg-[#F3EEE7] relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.coverImage}
-                  alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#19583E] text-[10px] font-bold px-3 py-1 rounded-full shadow-xs">
-                  {post.category}
-                </span>
-              </Link>
-
-              <div className="p-6 flex flex-col flex-1 justify-between">
-                <div>
-                  <div className="flex items-center gap-3 text-[11px] text-[#7A7A7A] mb-2.5 font-medium">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {post.date}
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {post.readTime}
-                    </span>
-                  </div>
-
-                  <h2 className="text-lg font-bold text-[#222222] font-serif-title leading-snug group-hover:text-[#DE5A35] transition-colors mb-2.5">
-                    <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                  </h2>
-
-                  <p className="text-xs text-[#595959] line-clamp-3 leading-relaxed mb-4">
-                    {post.excerpt}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-[#F3EEE7] flex items-center justify-between">
-                  <span className="text-[11px] text-[#7A7A7A]">Penulis: {post.author}</span>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#DE5A35] hover:text-[#C54724]"
-                  >
-                    <span>Baca Lengkap</span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        {/* Articles List with Category Filter & Search */}
+        <BlogIndexList initialPosts={INITIAL_BLOG_POSTS} />
       </main>
 
       <Footer />

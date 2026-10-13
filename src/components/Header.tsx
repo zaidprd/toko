@@ -41,7 +41,7 @@ export default function Header({
         <span className="opacity-60">•</span>
         <span>🌿 Kurasi Shahih Manhaj Salaf (Rujukan Rumaysho)</span>
         <span className="opacity-60">•</span>
-        <span className="hidden sm:inline">⚡ Ebook Langsung Unduh via Mayar</span>
+        <span className="hidden sm:inline">⚡ Ebook Langsung Unduh Instan</span>
       </div>
 
       {/* Main Header Row */}

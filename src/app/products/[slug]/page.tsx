@@ -176,7 +176,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 href={`/?checkout=${product.id}`}
                 className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all text-center block"
               >
-                <span>Beli Sekarang via Mayar (Tanpa Wajib Sign-in)</span>
+                <span>Beli Sekarang (Langsung Bayar)</span>
               </Link>
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-[#7A7A7A]">

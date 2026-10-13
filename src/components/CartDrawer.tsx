@@ -182,7 +182,7 @@ export default function CartDrawer({
               }}
               className="w-full py-3.5 bg-[#DE5A35] hover:bg-[#C54724] text-white rounded-full text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
-              <span>Lanjut ke Checkout via Mayar</span>
+              <span>Lanjut ke Pembayaran</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

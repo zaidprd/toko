@@ -74,7 +74,7 @@ export default function HeroBanner({ onSelectEbook, onSelectPhysical }: HeroBann
             <div>
               <h4 className="text-xs sm:text-sm font-bold text-[#222222]">Pembayaran Praktis</h4>
               <p className="text-[11px] text-[#7A7A7A] mt-0.5 leading-snug">
-                Mendukung QRIS instan &amp; Virtual Account Bank Syariah (Mayar).
+                Mendukung QRIS instan &amp; Virtual Account Bank Syariah.
               </p>
             </div>
           </div>
