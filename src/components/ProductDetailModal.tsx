@@ -249,15 +249,37 @@ export default function ProductDetailModal({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-[#595959] block mb-1">
-                      Ketik Kota / Kecamatan Tujuan:
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[10px] font-semibold text-[#595959]">
+                        Kota / Kecamatan Tujuan:
+                      </label>
+                      <span className="text-[10px] text-[#DE5A35] font-medium">Klik Cepat / Ketik</span>
+                    </div>
+
+                    {/* Quick clickable city chips */}
+                    <div className="flex flex-wrap gap-1 mb-1.5">
+                      {['Jakarta Barat', 'Bandung', 'Surabaya', 'Sleman', 'Medan', 'Makassar'].map((quickCity) => (
+                        <button
+                          key={quickCity}
+                          type="button"
+                          onClick={() => handleCalculateShipping(quickCity)}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border transition-all ${
+                            calcSubdistrict.toLowerCase().includes(quickCity.toLowerCase())
+                              ? 'bg-[#19583E] text-white border-[#19583E] font-bold'
+                              : 'bg-white text-[#595959] border-[#E6E1D8] hover:border-[#19583E]'
+                          }`}
+                        >
+                          {quickCity}
+                        </button>
+                      ))}
+                    </div>
+
                     <input
                       type="text"
                       value={calcSubdistrict}
                       onChange={(e) => handleCalculateShipping(e.target.value)}
                       className="w-full bg-white border border-[#E6E1D8] rounded-xl px-3 py-1.5 text-xs text-[#222222] focus:border-[#DE5A35] outline-none"
-                      placeholder="Contoh: Bandung, Surabaya, Medan, Tangerang..."
+                      placeholder="Atau ketik nama kota / kecamatan lain..."
                     />
                   </div>
 
