@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Etsy Warm Artisanal Design Tokens */
+  --bg-canvas: #FAF7F2;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F3EEE7;
+  --bg-hover: #EBE4D9;
+  
+  --text-main: #222222;
+  --text-muted: #595959;
+  --text-subtle: #7A7A7A;
+  
+  --border-warm: #E6E1D8;
+  --border-focus: #DE5A35;
+  
+  /* Brand Accents */
+  --etsy-orange: #DE5A35;
+  --etsy-orange-hover: #C54724;
+  --sunnah-emerald: #1F6347;
+  --sunnah-emerald-hover: #164E36;
+  --star-gold: #F59E0B;
+  
+  /* Pill & Badge Colors */
+  --badge-digital-bg: #E8F4EC;
+  --badge-digital-text: #19583E;
+  --badge-physical-bg: #FEF3C7;
+  --badge-physical-text: #92400E;
+  --badge-faceless-bg: #F3E8FF;
+  --badge-faceless-text: #6B21A8;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Etsy Style Typography & Animations */
+.font-serif-title {
+  font-family: var(--font-serif);
+}
+
+/* Smooth micro-interactions */
+.etsy-card {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.etsy-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(78, 62, 50, 0.12);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+}
+::-webkit-scrollbar-thumb {
+  background: #D4CCC0;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B6ABA0;
+}
+
+/* Badge styling */
+.badge-digital {
+  background-color: var(--badge-digital-bg);
+  color: var(--badge-digital-text);
+  border: 1px solid rgba(25, 88, 62, 0.15);
+}
+
+.badge-physical {
+  background-color: var(--badge-physical-bg);
+  color: var(--badge-physical-text);
+  border: 1px solid rgba(146, 64, 14, 0.15);
+}
+
+.badge-faceless {
+  background-color: var(--badge-faceless-bg);
+  color: var(--badge-faceless-text);
+  border: 1px solid rgba(107, 33, 168, 0.15);
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s ease-out forwards;
 }
